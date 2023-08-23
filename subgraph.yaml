@@ -1,0 +1,57 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: SFC
+    network: sepolia
+    source:
+      address: "0xa9F6D0DFf77b18D91D6256F5B1Ab69D10D3931e9"
+      abi: SFC
+      startBlock: 4144116
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BurntFTM
+        - ClaimedRewards
+        - CreatedValidator
+        - Delegated
+        - InflatedFTM
+        - LockedUpStake
+        - RefundedSlashedLegacyDelegation
+        - RestakedRewards
+        - Undelegated
+        - UnlockedStake
+        - UpdatedSlashingRefundRatio
+        - Withdrawn
+      abis:
+        - name: SFC
+          file: ./abis/SFC.json
+      eventHandlers:
+        - event: BurntFTM(uint256)
+          handler: handleBurntFTM
+        - event: ClaimedRewards(indexed address,indexed uint256,uint256,uint256,uint256)
+          handler: handleClaimedRewards
+        - event: CreatedValidator(indexed uint256,indexed address,uint256,uint256)
+          handler: handleCreatedValidator
+        - event: Delegated(indexed address,indexed uint256,uint256)
+          handler: handleDelegated
+        - event: InflatedFTM(indexed address,uint256,string)
+          handler: handleInflatedFTM
+        - event: LockedUpStake(indexed address,indexed uint256,uint256,uint256)
+          handler: handleLockedUpStake
+        - event: RefundedSlashedLegacyDelegation(indexed address,indexed uint256,uint256)
+          handler: handleRefundedSlashedLegacyDelegation
+        - event: RestakedRewards(indexed address,indexed uint256,uint256,uint256,uint256)
+          handler: handleRestakedRewards
+        - event: Undelegated(indexed address,indexed uint256,indexed uint256,uint256)
+          handler: handleUndelegated
+        - event: UnlockedStake(indexed address,indexed uint256,uint256,uint256)
+          handler: handleUnlockedStake
+        - event: UpdatedSlashingRefundRatio(indexed uint256,uint256)
+          handler: handleUpdatedSlashingRefundRatio
+        - event: Withdrawn(indexed address,indexed uint256,indexed uint256,uint256)
+          handler: handleWithdrawn
+      file: ./src/sfc.ts
