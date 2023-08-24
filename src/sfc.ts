@@ -1,4 +1,4 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { BigInt, log } from "@graphprotocol/graph-ts"
 import {
   SFC,
   BurntFTM,
@@ -14,54 +14,56 @@ import {
   UpdatedSlashingRefundRatio,
   Withdrawn
 } from "../generated/SFC/SFC"
-import { ExampleEntity } from "../generated/schema"
+import { Delegator, Validator } from "../generated/schema"
+
+function loadValidator (_id: string, _txHash: string): Validator | null {
+  let val: Validator | null = Validator.load(_id)
+  if (val == null) {
+    log.error("something wrong with ID: {}", [_txHash])
+    return null
+  }
+  return val
+}
+
+export function handleCreatedValidator(e: CreatedValidator): void {
+  let valEntity = new Validator(e.params.validatorID.toString())
+  valEntity.validatorId = e.params.validatorID
+  valEntity.auth = e.params.auth
+  valEntity.createdEpoch = e.params.createdEpoch
+  valEntity.createdTime = e.params.createdTime
+  valEntity.hash = e.transaction.hash
+  valEntity.save()
+}
+
+export function handleDelegated(e: Delegated): void {
+  log.info("Delegated handle with txHash: {}", [e.transaction.hash.toString()])
+  let del = Delegator.load(e.params.delegator.toString())
+  if (del == null) {
+    del = new Delegator(e.params.delegator.toString())
+  }
+  let val = loadValidator(e.params.toValidatorID.toString(), e.transaction.hash.toString())
+  if (val == null) return
+  val.totalStakedAmount = val.totalStakedAmount.plus(e.params.amount)
+  val.save()
+}
+
+
+export function handleUndelegated(e: Undelegated): void {
+  let del = Delegator.load(e.params.delegator.toString())
+  if (del == null) {
+    log.error("something wrong with ID: {}", [e.params.delegator.toString()])
+  }
+  // TODO: logic handler
+}
+
 
 export function handleBurntFTM(event: BurntFTM): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from)
-
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-  if (!entity) {
-    entity = new ExampleEntity(event.transaction.from)
-
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
-  }
-
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
-
-  // Entity fields can be set based on event parameters
-  entity.amount = event.params.amount
-
-  // Entities can be written to the store with `.save()`
-  entity.save()
-
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
-
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // None
+  
 }
 
 export function handleClaimedRewards(event: ClaimedRewards): void {}
 
-export function handleCreatedValidator(event: CreatedValidator): void {}
 
-export function handleDelegated(event: Delegated): void {}
 
 export function handleInflatedFTM(event: InflatedFTM): void {}
 
@@ -73,7 +75,6 @@ export function handleRefundedSlashedLegacyDelegation(
 
 export function handleRestakedRewards(event: RestakedRewards): void {}
 
-export function handleUndelegated(event: Undelegated): void {}
 
 export function handleUnlockedStake(event: UnlockedStake): void {}
 

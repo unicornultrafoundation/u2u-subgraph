@@ -1,5 +1,31 @@
-type ExampleEntity @entity {
-  id: Bytes!
-  count: BigInt!
-  amount: BigInt! # uint256
+type Staking @entity {
+  id: ID!
+  totalSelfStaked: BigInt!
+  totalDelegated: BigInt!
+  totalStaked: BigInt!
+  maxDailyRewards: BigInt!
+  totalValidator: BigInt!
+  totalDelegator: BigInt!
 }
+
+type Validator @entity {
+  id: ID!
+  validatorId: BigInt! #uint256
+  hash: Bytes!
+  auth: Bytes! #address
+  selfStaked: BigInt!
+  delegatedAmount: BigInt!
+  totalStakedAmount: BigInt!
+  createdEpoch: BigInt! #uint256
+  createdTime: BigInt! #uint156
+  delegators: [Delegator!]
+}
+
+type Delegator @entity {
+  id: Bytes!
+  address: Bytes!
+  stakedAmount: BigInt!
+  createdOn: BigInt!
+  validators: [Validator!]
+}
+
