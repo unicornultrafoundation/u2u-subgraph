@@ -1,31 +1,63 @@
 type Staking @entity {
   id: ID!
-  totalSelfStaked: BigInt!
-  totalDelegated: BigInt!
-  totalStaked: BigInt!
+  totalSelfStaked: BigInt! #Total validator self staked amount
+  totalDelegated: BigInt! #Total delegator staked amount
+  totalStaked: BigInt! #Total staked amount
+  totalValidator: BigInt! #Number of validator on network
+  totalDelegator: BigInt! #Number of delegator already stake
   maxDailyRewards: BigInt!
-  totalValidator: BigInt!
-  totalDelegator: BigInt!
 }
 
 type Validator @entity {
-  id: ID!
+  id: ID!  #validator id
   validatorId: BigInt! #uint256
-  hash: Bytes!
-  auth: Bytes! #address
-  selfStaked: BigInt!
-  delegatedAmount: BigInt!
-  totalStakedAmount: BigInt!
+  hash: Bytes! #Create validator transation hash
+  auth: Bytes! #Auth of the validator
+  selfStaked: BigInt! #validator self staked amount 
+  delegatedAmount: BigInt! #total delegator staked amount for this val
+  totalStakedAmount: BigInt! #total staked amount for this val
+  active: BigInt! #validator status
+  online: BigInt! #validator online
+  downTime: BigInt!
+  lockedUntil: BigInt!
+  lockDays: BigInt!
   createdEpoch: BigInt! #uint256
   createdTime: BigInt! #uint156
-  delegators: [Delegator!]
+  delegations: [Delegation!]
+}
+
+type Delegation @entity {
+  id: ID!
+  validatorId: BigInt! #Delegator for this validator
+  delegator: Delegator! #Delegator
+  # createdOn: BigInt! #created on time
+  stakedAmount: BigInt! #u2u amount staked
+  # claimedRewards: BigInt! #claimed rewards
+  # stashedRewards: BigInt! #stashed rewards
+  # expirationTime: BigInt! #expiration time
 }
 
 type Delegator @entity {
-  id: Bytes!
+  id: ID!
   address: Bytes!
-  stakedAmount: BigInt!
+  stakedAmount: BigInt! #total staked amount
   createdOn: BigInt!
-  validators: [Validator!]
+  validations: [Validation!]
 }
+
+type Validation @entity {
+  id: ID!
+  validatorID: Validator! #validator
+  stakedAmount: BigInt!
+}
+
+type Epoch @entity {
+  id: ID!
+  epochId: BigInt!
+  endTime: BigInt!
+  totalBaseReward: BigInt!
+  totalFee: BigInt!
+  totalTxReward: BigInt!
+}
+
 
