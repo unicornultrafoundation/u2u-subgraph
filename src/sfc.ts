@@ -16,6 +16,7 @@ import {
 } from "../generated/SFC/SFC"
 import { Delegation, Delegator, Validation, Validator, WithdrawalRequest } from "../generated/schema"
 import { EMPTY_STRING, ZERO_BI, arrayContained, concatID, isEqual } from "./helper"
+import { newDelegation, newDelegator, newValidation, newValidator, newWithdrawalRequest } from "./initialize"
 
 function loadValidator(_id: string, _txHash: string): Validator | null {
   let val: Validator | null = Validator.load(_id)
@@ -25,19 +26,20 @@ function loadValidator(_id: string, _txHash: string): Validator | null {
   }
   return val
 }
+
 /**
  * Create new validator event handle
  * @param e 
  * @returns 
  */
 export function handleCreatedValidator(e: CreatedValidator): void {
-  log.info("Create validator handle with txHash: {}", [e.transaction.hash.toString()])
-  let validator = Validator.load(e.params.validatorID.toString())
+  log.info("Create validator handle with txHash: {}", [e.transaction.hash.toHexString()])
+  let validator = Validator.load(e.params.validatorID.toHexString())
   if (validator != null) {
-    log.error("validator already exists with ID: {}", [e.params.validatorID.toString()])
+    log.error("validator already exists with ID: {}", [e.params.validatorID.toHexString()])
     return;
   }
-  validator = new Validator(e.params.validatorID.toString())
+  validator = newValidator(e.params.validatorID)
   validator.validatorId = e.params.validatorID
   validator.auth = e.params.auth
   validator.createdEpoch = e.params.createdEpoch
@@ -52,45 +54,44 @@ export function handleCreatedValidator(e: CreatedValidator): void {
  * @returns 
  */
 export function handleDelegated(e: Delegated): void {
-  log.info("Delegated handle with txHash: {}", [e.transaction.hash.toString()])
+  log.info("Delegated handle with txHash: {}", [e.transaction.hash.toHexString()])
 
   // Validation update
-  let _validationId = concatID(e.params.delegator.toString(), e.params.toValidatorID.toString())
+  let _validationId = concatID(e.params.delegator.toHexString(), e.params.toValidatorID.toHexString())
   let validation = Validation.load(_validationId)
   if (validation == null) {
-    validation = new Validation(_validationId)
-    validation.validatorId = e.params.toValidatorID.toString();
+    validation = newValidation(_validationId)
+    validation.validatorId = e.params.toValidatorID.toHexString();
   }
   validation.stakedAmount = validation.stakedAmount.plus(e.params.amount)
 
   // Delegation table update
-  let _delegationId = concatID(e.params.toValidatorID.toString(), e.params.delegator.toString())
+  let _delegationId = concatID(e.params.toValidatorID.toHexString(), e.params.delegator.toHexString())
   let delegation = Delegation.load(_delegationId)
   if (delegation == null) {
-    delegation = new Delegation(_delegationId)
-    delegation.delegator = e.params.delegator.toString()
+    delegation = newDelegation(_delegationId)
+    delegation.delegator = e.params.delegator.toHexString()
     delegation.validatorId = e.params.toValidatorID
   }
   delegation.stakedAmount = delegation.stakedAmount.plus(e.params.amount)
 
   // Delegator table update
-  let delegator = Delegator.load(e.params.delegator.toString())
+  let delegator = Delegator.load(e.params.delegator.toHexString())
   if (delegator == null) {
-    delegator = new Delegator(e.params.delegator.toString())
+    delegator = newDelegator(e.params.delegator.toHexString())
     delegator.createdOn = e.block.timestamp
     delegator.address = e.params.delegator
   }
   delegator.stakedAmount = delegator.stakedAmount.plus(e.params.amount) // Increase staked amount
-  if (!delegator.validations) {
-    delegator.validations = [e.params.toValidatorID.toString()]
-  } else if (delegator.validations && arrayContained(delegator.validations!, e.params.toValidatorID.toString())) {
-    delegator.validations!.push(e.params.toValidatorID.toString())
+
+  if (arrayContained(delegator.validations!, e.params.toValidatorID.toHexString())) {
+    delegator.validations!.push(e.params.toValidatorID.toHexString())
   }
 
   // Validator update
-  let validator = loadValidator(e.params.toValidatorID.toString(), e.transaction.hash.toString())
+  let validator = loadValidator(e.params.toValidatorID.toHexString(), e.transaction.hash.toHexString())
   if (validator == null) return
-  if (isEqual(validator.auth.toString(), e.params.delegator.toString())) {
+  if (isEqual(validator.auth.toHexString(), e.params.delegator.toHexString())) {
     validator.selfStaked = validator.selfStaked.plus(e.params.amount)
   } else {
     validator.delegatedAmount = validator.delegatedAmount.plus(e.params.amount)
@@ -140,7 +141,7 @@ export function handleUndelegated(e: Undelegated): void {
   let _wrId = concatID(concatID(e.params.delegator.toString(), e.params.toValidatorID.toString()), e.params.wrID.toString())
   let withdrawalRequest = WithdrawalRequest.load(_wrId)
   if (withdrawalRequest == null) {
-    withdrawalRequest = new WithdrawalRequest(_wrId)
+    withdrawalRequest = newWithdrawalRequest(_wrId)
     withdrawalRequest.delegatorAddress = e.params.delegator
     withdrawalRequest.validatorId = e.params.toValidatorID
   }
