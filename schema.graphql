@@ -27,11 +27,12 @@ type Validator @entity {
 }
 
 type Delegation @entity {
-  id: ID!
+  id: ID! #ID={validatorID}-{delegator}
   validatorId: BigInt! #Delegator for this validator
   delegator: Delegator! #Delegator
   # createdOn: BigInt! #created on time
   stakedAmount: BigInt! #u2u amount staked
+  wr: WithdrawalRequest!
   # claimedRewards: BigInt! #claimed rewards
   # stashedRewards: BigInt! #stashed rewards
   # expirationTime: BigInt! #expiration time
@@ -46,9 +47,19 @@ type Delegator @entity {
 }
 
 type Validation @entity {
-  id: ID!
-  validatorID: Validator! #validator
+  id: ID! #ID={delegatorAddress}-{validatorId}
+  validatorId: Validator! #validator
   stakedAmount: BigInt!
+}
+
+type WithdrawalRequest @entity {
+  id: ID! #ID={delegatorAddress}-{validatorId}
+  delegatorAddress: Bytes! #Delegator request withdraw
+  validatorId: BigInt!
+  wrID: BigInt!
+  epoch: BigInt!
+  time: BigInt!
+  amount: BigInt!
 }
 
 type Epoch @entity {
