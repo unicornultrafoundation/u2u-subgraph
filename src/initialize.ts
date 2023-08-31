@@ -1,13 +1,13 @@
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { Delegation, Delegator, Staking, Validation, Validator, WithdrawalRequest } from "../generated/schema";
-import { EMPTY_STRING, ZERO_BI, ZERO_BYTES } from "./helper";
+import { EMPTY_STRING, ONE_BI, ZERO_BI, ZERO_BYTES } from "./helper";
 
 /**
  * Initialize new validation entity
  * @param _valId 
  * @returns 
  */
-export function newValidator (_valId: BigInt): Validator {
+export function newValidator(_valId: BigInt): Validator {
   let validator = new Validator(_valId.toHexString())
   validator.validatorId = _valId
   validator.auth = ZERO_BYTES
@@ -62,7 +62,7 @@ export function newDelegator(_delegatorId: string): Delegator {
   let delegator = new Delegator(_delegatorId)
   delegator.address = ZERO_BYTES
   delegator.createdOn = ZERO_BI
-  delegator.stakedAmount= ZERO_BI
+  delegator.stakedAmount = ZERO_BI
   delegator.validations = []
   return delegator
 }
@@ -77,12 +77,17 @@ export function newWithdrawalRequest(_wrId: string): WithdrawalRequest {
   return wr
 }
 
-export function newStaking(_id: string): Staking {
-  let staking = new Staking(_id)
-  staking.totalStaked = ZERO_BI
-  staking.totalDelegated = ZERO_BI
-  staking.totalSelfStaked = ZERO_BI
-  staking.totalValidator = ZERO_BI
-  staking.totalDelegator = ZERO_BI
+export function loadStaking(): Staking {
+  let _id = ONE_BI.toHexString()
+  let staking = Staking.load(_id)
+  if (staking == null) {
+    staking = new Staking(_id)
+    staking.totalStaked = ZERO_BI
+    staking.totalDelegated = ZERO_BI
+    staking.totalSelfStaked = ZERO_BI
+    staking.totalValidator = ZERO_BI
+    staking.totalDelegator = ZERO_BI
+    staking.maxDailyRewards = ZERO_BI
+  }
   return staking
 }

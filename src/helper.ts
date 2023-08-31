@@ -9,7 +9,7 @@ export function isEqual(str1: string, str2: string): boolean {
 }
 
 export function arrayContained(arr: string[], val: string): boolean {
-  if (!arr || arr.length == 0) return false
+  if (arr.length == 0) return false
   return arr.indexOf(val) > -1;
 }
 

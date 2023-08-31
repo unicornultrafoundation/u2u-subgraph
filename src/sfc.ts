@@ -15,8 +15,8 @@ import {
   Withdrawn
 } from "../generated/SFC/SFC"
 import { Delegation, Delegator, Validation, Validator, WithdrawalRequest } from "../generated/schema"
-import { EMPTY_STRING, ZERO_BI, arrayContained, concatID, isEqual } from "./helper"
-import { newDelegation, newDelegator, newValidation, newValidator, newWithdrawalRequest } from "./initialize"
+import { EMPTY_STRING, ONE_BI, ZERO_BI, arrayContained, concatID, isEqual } from "./helper"
+import { loadStaking, newDelegation, newDelegator, newValidation, newValidator, newWithdrawalRequest } from "./initialize"
 
 function loadValidator(_id: string, _txHash: string): Validator | null {
   let val: Validator | null = Validator.load(_id)
@@ -45,6 +45,12 @@ export function handleCreatedValidator(e: CreatedValidator): void {
   validator.createdEpoch = e.params.createdEpoch
   validator.createdTime = e.params.createdTime
   validator.hash = e.transaction.hash
+
+  // Count validator ccreation
+  let staking = loadStaking()
+  staking.totalValidator = staking.totalValidator.plus(ONE_BI)
+
+  staking.save()
   validator.save()
 }
 
@@ -55,6 +61,8 @@ export function handleCreatedValidator(e: CreatedValidator): void {
  */
 export function handleDelegated(e: Delegated): void {
   log.info("Delegated handle with txHash: {}", [e.transaction.hash.toHexString()])
+
+  let staking = loadStaking() // load staking 
 
   // Validation update
   let _validationId = concatID(e.params.delegator.toHexString(), e.params.toValidatorID.toHexString())
@@ -81,33 +89,45 @@ export function handleDelegated(e: Delegated): void {
     delegator = newDelegator(e.params.delegator.toHexString())
     delegator.createdOn = e.block.timestamp
     delegator.address = e.params.delegator
+
+    // Count new validator
+    staking.totalDelegator = staking.totalDelegator.plus(ONE_BI)
   }
   delegator.stakedAmount = delegator.stakedAmount.plus(e.params.amount) // Increase staked amount
 
-  if (arrayContained(delegator.validations!, e.params.toValidatorID.toHexString())) {
-    delegator.validations!.push(e.params.toValidatorID.toHexString())
+  let _delValidations = delegator.validations;
+  if (!arrayContained(_delValidations,_validationId)) {
+    _delValidations.push(_validationId)
   }
+  delegator.validations = _delValidations
 
   // Validator update
   let validator = loadValidator(e.params.toValidatorID.toHexString(), e.transaction.hash.toHexString())
   if (validator == null) return
   if (isEqual(validator.auth.toHexString(), e.params.delegator.toHexString())) {
     validator.selfStaked = validator.selfStaked.plus(e.params.amount)
+    staking.totalSelfStaked = staking.totalSelfStaked.plus(e.params.amount)
   } else {
     validator.delegatedAmount = validator.delegatedAmount.plus(e.params.amount)
+    staking.totalDelegated = staking.totalDelegated.plus(e.params.amount)
   }
   validator.totalStakedAmount = validator.totalStakedAmount.plus(e.params.amount)
-  if (!validator.delegations) {
-    validator.delegations = [_delegationId]
-  } else if (validator.delegations && arrayContained(validator.delegations!, _delegationId)) {
-    validator.delegations!.push(_delegationId)
+  staking.totalStaked = staking.totalStaked.plus(e.params.amount)
+
+  let _valDelegations = validator.delegations;
+  if (!arrayContained(_valDelegations, _delegationId)) {
+    _valDelegations.push(_delegationId)
   }
+  validator.delegations = _valDelegations;
+
 
   // Save
   validation.save()
+  delegation.save()
   validator.save()
   delegator.save()
-  delegation.save()
+
+  staking.save()
 }
 
 /**
@@ -117,6 +137,9 @@ export function handleDelegated(e: Delegated): void {
  */
 export function handleUndelegated(e: Undelegated): void {
   log.info("Undelegated handle with txHash: {}", [e.transaction.hash.toString()])
+
+  let staking = loadStaking() // load staking
+
   // Validation update
   let _validationId = concatID(e.params.delegator.toString(), e.params.toValidatorID.toString())
   let validation = Validation.load(_validationId)
@@ -135,7 +158,7 @@ export function handleUndelegated(e: Undelegated): void {
     log.error("undelegated: load delegator failed with ID: {}, txHash: {}", [e.params.delegator.toString(), e.transaction.hash.toString()])
     return
   }
-  delegator.stakedAmount = delegator.stakedAmount.minus(e.params.amount) // Increase staked amount
+  delegator.stakedAmount = delegator.stakedAmount.minus(e.params.amount)
 
   // Handle withdrawal request
   let _wrId = concatID(concatID(e.params.delegator.toString(), e.params.toValidatorID.toString()), e.params.wrID.toString())
@@ -149,7 +172,6 @@ export function handleUndelegated(e: Undelegated): void {
   withdrawalRequest.time = e.block.timestamp;
   // TODO: handle epoch
   // withdrawalRequest.epoch = 
-
   // Delegation table
   let _delegationId = concatID(e.params.toValidatorID.toString(), e.params.delegator.toString())
   let delegation = Delegation.load(_delegationId)
@@ -168,10 +190,13 @@ export function handleUndelegated(e: Undelegated): void {
   }
   if (isEqual(validator.auth.toString(), e.params.delegator.toString())) {
     validator.selfStaked = validator.selfStaked.minus(e.params.amount)
+    staking.totalSelfStaked = staking.totalSelfStaked.minus(e.params.amount)
   } else {
     validator.delegatedAmount = validator.delegatedAmount.minus(e.params.amount)
+    staking.totalDelegated = staking.totalDelegated.minus(e.params.amount)
   }
   validator.totalStakedAmount = validator.totalStakedAmount.minus(e.params.amount)
+  staking.totalStaked = staking.totalStaked.minus(e.params.amount)
 
   // save
   withdrawalRequest.save()
@@ -207,14 +232,9 @@ export function handleWithdrawn(e: Withdrawn): void {
   delegation.save()
 }
 
-
-export function handleBurntFTM(event: BurntFTM): void {
-
-}
+export function handleBurntFTM(event: BurntFTM): void {}
 
 export function handleClaimedRewards(event: ClaimedRewards): void { }
-
-
 
 export function handleInflatedFTM(event: InflatedFTM): void { }
 
@@ -225,7 +245,6 @@ export function handleRefundedSlashedLegacyDelegation(
 ): void { }
 
 export function handleRestakedRewards(event: RestakedRewards): void { }
-
 
 export function handleUnlockedStake(event: UnlockedStake): void { }
 

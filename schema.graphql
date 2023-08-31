@@ -23,7 +23,7 @@ type Validator @entity {
   lockDays: BigInt!
   createdEpoch: BigInt! #uint256
   createdTime: BigInt! #uint156
-  delegations: [Delegation!]
+  delegations: [Delegation!]!
 }
 
 type Delegation @entity {
@@ -43,7 +43,7 @@ type Delegator @entity {
   address: Bytes!
   stakedAmount: BigInt! #total staked amount
   createdOn: BigInt!
-  validations: [Validation!]
+  validations: [Validation!]!
 }
 
 type Validation @entity {
