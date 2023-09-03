@@ -1,4 +1,4 @@
-import { BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { BigInt } from "@graphprotocol/graph-ts";
 import { Delegation, Delegator, Staking, Validation, Validator, WithdrawalRequest } from "../generated/schema";
 import { EMPTY_STRING, ONE_BI, ZERO_BI, ZERO_BYTES } from "./helper";
 
@@ -25,6 +25,8 @@ export function newValidator(_valId: BigInt): Validator {
   validator.createdEpoch = ZERO_BI
   validator.createdTime = ZERO_BI
   validator.delegations = []
+  validator.votingPower = ZERO_BI
+  validator.totalClaimedRewards = ZERO_BI
   return validator
 }
 
@@ -50,6 +52,7 @@ export function newDelegation(_delegationId: string): Delegation {
   delegation.delegator = EMPTY_STRING
   delegation.stakedAmount = ZERO_BI
   delegation.wr = EMPTY_STRING
+  delegation.totalClaimedRewards = ZERO_BI
   return delegation
 }
 
@@ -64,6 +67,7 @@ export function newDelegator(_delegatorId: string): Delegator {
   delegator.createdOn = ZERO_BI
   delegator.stakedAmount = ZERO_BI
   delegator.validations = []
+  delegator.totalClaimedRewards = ZERO_BI
   return delegator
 }
 
@@ -71,9 +75,9 @@ export function newWithdrawalRequest(_wrId: string): WithdrawalRequest {
   let wr = new WithdrawalRequest(_wrId)
   wr.delegatorAddress = ZERO_BYTES
   wr.validatorId = ZERO_BI
-  wr.epoch = ZERO_BI
-  wr.amount = ZERO_BI
+  wr.unbondingAmount = ZERO_BI
   wr.time = ZERO_BI
+  wr.wrID = ZERO_BI
   return wr
 }
 
@@ -87,7 +91,12 @@ export function loadStaking(): Staking {
     staking.totalSelfStaked = ZERO_BI
     staking.totalValidator = ZERO_BI
     staking.totalDelegator = ZERO_BI
-    staking.maxDailyRewards = ZERO_BI
+    staking.totalClaimedRewards = ZERO_BI
   }
   return staking
+}
+
+export function calVotingPower(valStaked: BigInt, totalStaked: BigInt): BigInt {
+  if (valStaked.isZero() || totalStaked.isZero()) return ZERO_BI
+  return valStaked.times(BigInt.fromI32(1000000)).div(totalStaked)
 }

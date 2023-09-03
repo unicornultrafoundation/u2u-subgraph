@@ -5,7 +5,7 @@ type Staking @entity {
   totalStaked: BigInt! #Total staked amount
   totalValidator: BigInt! #Number of validator on network
   totalDelegator: BigInt! #Number of delegator already stake
-  maxDailyRewards: BigInt!
+  totalClaimedRewards: BigInt!
 }
 
 type Validator @entity {
@@ -24,6 +24,8 @@ type Validator @entity {
   createdEpoch: BigInt! #uint256
   createdTime: BigInt! #uint156
   delegations: [Delegation!]!
+  votingPower: BigInt!
+  totalClaimedRewards: BigInt!
 }
 
 type Delegation @entity {
@@ -33,6 +35,7 @@ type Delegation @entity {
   # createdOn: BigInt! #created on time
   stakedAmount: BigInt! #u2u amount staked
   wr: WithdrawalRequest!
+  totalClaimedRewards: BigInt!
   # claimedRewards: BigInt! #claimed rewards
   # stashedRewards: BigInt! #stashed rewards
   # expirationTime: BigInt! #expiration time
@@ -44,6 +47,7 @@ type Delegator @entity {
   stakedAmount: BigInt! #total staked amount
   createdOn: BigInt!
   validations: [Validation!]!
+  totalClaimedRewards: BigInt!
 }
 
 type Validation @entity {
@@ -53,22 +57,13 @@ type Validation @entity {
 }
 
 type WithdrawalRequest @entity {
-  id: ID! #ID={delegatorAddress}-{validatorId}
+  id: ID! #ID={delegatorAddress}-{validatorId}-{wrID}
   delegatorAddress: Bytes! #Delegator request withdraw
   validatorId: BigInt!
   wrID: BigInt!
-  epoch: BigInt!
   time: BigInt!
-  amount: BigInt!
+  unbondingAmount: BigInt!
 }
 
-type Epoch @entity {
-  id: ID!
-  epochId: BigInt!
-  endTime: BigInt!
-  totalBaseReward: BigInt!
-  totalFee: BigInt!
-  totalTxReward: BigInt!
-}
 
 
