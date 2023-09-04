@@ -1,5 +1,5 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { Delegation, Delegator, Staking, Validation, Validator, WithdrawalRequest } from "../generated/schema";
+import { Delegation, Delegator, Staking, Transation, Validation, Validator, WithdrawalRequest } from "../generated/schema";
 import { EMPTY_STRING, ONE_BI, ZERO_BI, ZERO_BYTES } from "./helper";
 
 /**
@@ -78,6 +78,7 @@ export function newWithdrawalRequest(_wrId: string): WithdrawalRequest {
   wr.unbondingAmount = ZERO_BI
   wr.time = ZERO_BI
   wr.wrID = ZERO_BI
+  wr.hash = ZERO_BYTES
   return wr
 }
 
@@ -94,6 +95,24 @@ export function loadStaking(): Staking {
     staking.totalClaimedRewards = ZERO_BI
   }
   return staking
+}
+
+export function newTransaction(id: string): Transation {
+  let transaction = new Transation(id)
+  transaction.txHash = ZERO_BYTES
+  transaction.type = ZERO_BI
+  transaction.from = ZERO_BYTES
+  transaction.to = ZERO_BYTES
+  transaction.validatorId = ZERO_BI
+  transaction.delegator = ZERO_BYTES
+  transaction.createdAt = ZERO_BI
+  transaction.block = ZERO_BI
+  transaction.stakedAmount = ZERO_BI
+  transaction.claimedAmount = ZERO_BI
+  transaction.undelegatedAmount = ZERO_BI
+  transaction.withdrawalAmount = ZERO_BI
+  transaction.wrID = ZERO_BI
+  return transaction
 }
 
 export function calVotingPower(valStaked: BigInt, totalStaked: BigInt): BigInt {

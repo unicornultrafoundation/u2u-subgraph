@@ -22,3 +22,12 @@ export let TWO_BI = BigInt.fromI32(2)
 export let HUNDRED_BI = BigInt.fromI32(10000)
 
 export let EMPTY_STRING = "";
+
+export enum TransactionType {
+  CreateValidator = 1,
+  Delegate = 2,
+  Undelegate = 3,
+  Withdrawn = 4,
+  ClaimRewards = 5,
+  Restake = 6
+}

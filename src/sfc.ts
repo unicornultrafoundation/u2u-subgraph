@@ -14,9 +14,10 @@ import {
   UpdatedSlashingRefundRatio,
   Withdrawn
 } from "../generated/SFC/SFC"
+import { BigInt } from "@graphprotocol/graph-ts";
 import { Delegation, Delegator, Validation, Validator, WithdrawalRequest } from "../generated/schema"
-import { EMPTY_STRING, ONE_BI, ZERO_BI, arrayContained, concatID, isEqual } from "./helper"
-import { calVotingPower, loadStaking, newDelegation, newDelegator, newValidation, newValidator, newWithdrawalRequest } from "./initialize"
+import { EMPTY_STRING, ONE_BI, TransactionType, ZERO_BI, ZERO_BYTES, arrayContained, concatID, isEqual } from "./helper"
+import { calVotingPower, loadStaking, newDelegation, newDelegator, newTransaction, newValidation, newValidator, newWithdrawalRequest } from "./initialize"
 
 function loadValidator(_id: string, _txHash: string): Validator | null {
   let val: Validator | null = Validator.load(_id)
@@ -50,8 +51,21 @@ export function handleCreatedValidator(e: CreatedValidator): void {
   let staking = loadStaking()
   staking.totalValidator = staking.totalValidator.plus(ONE_BI)
 
+  let _transactionId = concatID(e.transaction.hash.toHexString(), TransactionType.CreateValidator.toString())
+  let transaction = newTransaction(_transactionId)
+  transaction.txHash = e.transaction.hash
+  transaction.type = BigInt.fromI32(TransactionType.CreateValidator)
+  transaction.from = e.transaction.from
+  transaction.to = e.transaction.to
+  transaction.validatorId = e.params.validatorID
+  transaction.delegator = e.transaction.from
+  transaction.createdAt = e.block.timestamp
+  transaction.block = e.block.number
+  transaction.stakedAmount = e.transaction.value
+
   staking.save()
   validator.save()
+  transaction.save()
 }
 
 /**
@@ -125,13 +139,25 @@ export function handleDelegated(e: Delegated): void {
   validator.delegations = _valDelegations;
   validator.votingPower = calVotingPower(_newTotalValStaked, _newTotalStaked)
 
+  let _transactionId = concatID(e.transaction.hash.toHexString(), TransactionType.Delegate.toString())
+  let transaction = newTransaction(_transactionId)
+  transaction.txHash = e.transaction.hash
+  transaction.type = BigInt.fromI32(TransactionType.Delegate)
+  transaction.from = e.transaction.from
+  transaction.to = e.transaction.to
+  transaction.validatorId = e.params.toValidatorID
+  transaction.delegator = e.params.delegator
+  transaction.createdAt = e.block.timestamp
+  transaction.block = e.block.number
+  transaction.stakedAmount = e.params.amount
+
   // Save
   validation.save()
   delegation.save()
   validator.save()
   delegator.save()
-
   staking.save()
+  transaction.save()
 }
 
 /**
@@ -173,6 +199,7 @@ export function handleUndelegated(e: Undelegated): void {
     withdrawalRequest.validatorId = e.params.toValidatorID
     withdrawalRequest.wrID = e.params.wrID
   }
+  withdrawalRequest.hash = e.transaction.hash
   withdrawalRequest.unbondingAmount = withdrawalRequest.unbondingAmount.plus(e.params.amount)
   withdrawalRequest.time = e.block.timestamp;
   // Delegation load
@@ -203,6 +230,20 @@ export function handleUndelegated(e: Undelegated): void {
   validator.totalStakedAmount = _newTotalValStaked
   staking.totalStaked = _newTotalStaked
   validator.votingPower = calVotingPower(_newTotalValStaked, _newTotalStaked)
+
+  let _transactionId = concatID(e.transaction.hash.toHexString(), TransactionType.Undelegate.toString())
+  let transaction = newTransaction(_transactionId)
+  transaction.txHash = e.transaction.hash
+  transaction.type = BigInt.fromI32(TransactionType.Undelegate)
+  transaction.from = e.transaction.from
+  transaction.to = e.transaction.to
+  transaction.validatorId = e.params.toValidatorID
+  transaction.delegator = e.params.delegator
+  transaction.createdAt = e.block.timestamp
+  transaction.block = e.block.number
+  transaction.undelegatedAmount = e.params.amount
+  transaction.wrID = e.params.wrID
+
   // save
   withdrawalRequest.save()
   validation.save()
@@ -234,9 +275,23 @@ export function handleWithdrawn(e: Withdrawn): void {
     return
   }
   delegation.wr = EMPTY_STRING
+
+  let _transactionId = concatID(e.transaction.hash.toHexString(), TransactionType.Withdrawn.toString())
+  let transaction = newTransaction(_transactionId)
+  transaction.txHash = e.transaction.hash
+  transaction.type = BigInt.fromI32(TransactionType.Withdrawn)
+  transaction.from = e.transaction.from
+  transaction.to = e.transaction.to
+  transaction.validatorId = e.params.toValidatorID
+  transaction.delegator = e.params.delegator
+  transaction.createdAt = e.block.timestamp
+  transaction.block = e.block.number
+  transaction.wrID = e.params.wrID
+  transaction.withdrawalAmount = e.params.amount
   // Save
   withdrawalRequest.save()
   delegation.save()
+  transaction.save()
 }
 
 /**
@@ -272,11 +327,49 @@ export function handleClaimedRewards(e: ClaimedRewards): void {
   staking.totalClaimedRewards = staking.totalClaimedRewards.plus(_totalRewards)
   delegation.totalClaimedRewards = delegation.totalClaimedRewards.plus(_totalRewards)
 
+
+  let _transactionId = concatID(e.transaction.hash.toHexString(), TransactionType.ClaimRewards.toString())
+  let transaction = newTransaction(_transactionId)
+  transaction.txHash = e.transaction.hash
+  transaction.type = BigInt.fromI32(TransactionType.ClaimRewards)
+  transaction.from = e.transaction.from
+  transaction.to = e.transaction.to
+  transaction.validatorId = e.params.toValidatorID
+  transaction.delegator = e.params.delegator
+  transaction.createdAt = e.block.timestamp
+  transaction.block = e.block.number
+  transaction.claimedAmount = _totalRewards
+
   delegator.save()
   staking.save()
   validator.save()
   delegation.save()
+  transaction.save()
 }
+
+/**
+ * Handle restake rewards
+ * @param e 
+ */
+export function handleRestakedRewards(e: RestakedRewards): void {
+
+  log.info("Restake rewards handle with txHash: {}", [e.transaction.hash.toHexString()])
+  const _totalRewards = e.params.lockupBaseReward.plus(e.params.lockupExtraReward).plus(e.params.unlockedReward)
+  let _transactionId = concatID(e.transaction.hash.toHexString(), TransactionType.Restake.toString())
+  let transaction = newTransaction(_transactionId)
+  transaction.txHash = e.transaction.hash
+  transaction.type = BigInt.fromI32(TransactionType.Restake)
+  transaction.from = e.transaction.from
+  transaction.to = e.transaction.to
+  transaction.validatorId = e.params.toValidatorID
+  transaction.delegator = e.params.delegator
+  transaction.createdAt = e.block.timestamp
+  transaction.block = e.block.number
+  transaction.claimedAmount = _totalRewards
+  transaction.stakedAmount = _totalRewards
+  transaction.save()
+}
+
 
 export function handleBurntFTM(event: BurntFTM): void {}
 export function handleInflatedFTM(event: InflatedFTM): void { }
@@ -284,7 +377,6 @@ export function handleLockedUpStake(event: LockedUpStake): void { }
 export function handleRefundedSlashedLegacyDelegation(
   event: RefundedSlashedLegacyDelegation
 ): void { }
-export function handleRestakedRewards(event: RestakedRewards): void { }
 export function handleUnlockedStake(event: UnlockedStake): void { }
 export function handleUpdatedSlashingRefundRatio(
   event: UpdatedSlashingRefundRatio

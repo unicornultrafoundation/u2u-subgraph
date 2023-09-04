@@ -58,6 +58,7 @@ type Validation @entity {
 
 type WithdrawalRequest @entity {
   id: ID! #ID={delegatorAddress}-{validatorId}-{wrID}
+  hash: Bytes!
   delegatorAddress: Bytes! #Delegator request withdraw
   validatorId: BigInt!
   wrID: BigInt!
@@ -65,5 +66,21 @@ type WithdrawalRequest @entity {
   unbondingAmount: BigInt!
 }
 
+type Transation @entity {
+  id: ID!
+  txHash: Bytes!
+  type: BigInt!
+  from: Bytes!
+  to: Bytes
+  validatorId: BigInt!
+  delegator: Bytes!
+  createdAt: BigInt!
+  block: BigInt!
+  stakedAmount: BigInt!
+  claimedAmount: BigInt!
+  undelegatedAmount: BigInt!
+  withdrawalAmount: BigInt!
+  wrID: BigInt!
+}
 
 
