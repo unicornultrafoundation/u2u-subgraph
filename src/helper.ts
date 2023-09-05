@@ -29,5 +29,7 @@ export enum TransactionType {
   Undelegate = 3,
   Withdrawn = 4,
   ClaimRewards = 5,
-  Restake = 6
+  Restake = 6,
+  LockedUp = 7,
+  Unlocked = 8
 }

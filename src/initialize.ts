@@ -1,5 +1,5 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { Delegation, Delegator, Staking, Transation, Validation, Validator, WithdrawalRequest } from "../generated/schema";
+import { Delegation, Delegator, LockedUp, Staking, Transation, Validation, Validator, WithdrawalRequest } from "../generated/schema";
 import { EMPTY_STRING, ONE_BI, ZERO_BI, ZERO_BYTES } from "./helper";
 
 /**
@@ -37,7 +37,7 @@ export function newValidator(_valId: BigInt): Validator {
  */
 export function newValidation(_validationId: string): Validation {
   let validation = new Validation(_validationId)
-  validation.validatorId = EMPTY_STRING
+  validation.validator = EMPTY_STRING
   validation.stakedAmount = ZERO_BI
   return validation
 }
@@ -71,6 +71,11 @@ export function newDelegator(_delegatorId: string): Delegator {
   return delegator
 }
 
+/**
+ * Initialize new withdrawal request
+ * @param _wrId 
+ * @returns 
+ */
 export function newWithdrawalRequest(_wrId: string): WithdrawalRequest {
   let wr = new WithdrawalRequest(_wrId)
   wr.delegatorAddress = ZERO_BYTES
@@ -82,6 +87,10 @@ export function newWithdrawalRequest(_wrId: string): WithdrawalRequest {
   return wr
 }
 
+/**
+ * load staking entity
+ * @returns 
+ */
 export function loadStaking(): Staking {
   let _id = ONE_BI.toHexString()
   let staking = Staking.load(_id)
@@ -97,6 +106,11 @@ export function loadStaking(): Staking {
   return staking
 }
 
+/**
+ * Initialize new transaction records
+ * @param id 
+ * @returns 
+ */
 export function newTransaction(id: string): Transation {
   let transaction = new Transation(id)
   transaction.txHash = ZERO_BYTES
@@ -112,7 +126,22 @@ export function newTransaction(id: string): Transation {
   transaction.undelegatedAmount = ZERO_BI
   transaction.withdrawalAmount = ZERO_BI
   transaction.wrID = ZERO_BI
+  transaction.lockedAmount = ZERO_BI
+  transaction.lockDuration = ZERO_BI
+  transaction.unlockedAmount = ZERO_BI
+  transaction.penaltyAmount = ZERO_BI
   return transaction
+}
+
+export function newLockedUp(_id: string): LockedUp {
+  let lockedup = new LockedUp(_id)
+  lockedup.delegator = EMPTY_STRING
+  lockedup.validator = EMPTY_STRING
+  lockedup.duration = ZERO_BI
+  lockedup.lockedAmount = ZERO_BI
+  lockedup.unlockedAmount = ZERO_BI
+  lockedup.penalty = ZERO_BI
+  return lockedup
 }
 
 export function calVotingPower(valStaked: BigInt, totalStaked: BigInt): BigInt {

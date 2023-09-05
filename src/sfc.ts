@@ -15,9 +15,9 @@ import {
   Withdrawn
 } from "../generated/SFC/SFC"
 import { BigInt } from "@graphprotocol/graph-ts";
-import { Delegation, Delegator, Validation, Validator, WithdrawalRequest } from "../generated/schema"
+import { Delegation, Delegator, LockedUp, Validation, Validator, WithdrawalRequest } from "../generated/schema"
 import { EMPTY_STRING, ONE_BI, TransactionType, ZERO_BI, ZERO_BYTES, arrayContained, concatID, isEqual } from "./helper"
-import { calVotingPower, loadStaking, newDelegation, newDelegator, newTransaction, newValidation, newValidator, newWithdrawalRequest } from "./initialize"
+import { calVotingPower, loadStaking, newDelegation, newDelegator, newLockedUp, newTransaction, newValidation, newValidator, newWithdrawalRequest } from "./initialize"
 
 function loadValidator(_id: string, _txHash: string): Validator | null {
   let val: Validator | null = Validator.load(_id)
@@ -83,7 +83,7 @@ export function handleDelegated(e: Delegated): void {
   let validation = Validation.load(_validationId)
   if (validation == null) {
     validation = newValidation(_validationId)
-    validation.validatorId = e.params.toValidatorID.toHexString();
+    validation.validator = e.params.toValidatorID.toHexString();
   }
   validation.stakedAmount = validation.stakedAmount.plus(e.params.amount)
 
@@ -110,7 +110,7 @@ export function handleDelegated(e: Delegated): void {
   delegator.stakedAmount = delegator.stakedAmount.plus(e.params.amount) // Increase staked amount
 
   let _delValidations = delegator.validations;
-  if (!arrayContained(_delValidations,_validationId)) {
+  if (!arrayContained(_delValidations, _validationId)) {
     _delValidations.push(_validationId)
   }
   delegator.validations = _delValidations
@@ -298,7 +298,7 @@ export function handleWithdrawn(e: Withdrawn): void {
  * Claimed rewards event handle
  * @param event 
  */
-export function handleClaimedRewards(e: ClaimedRewards): void { 
+export function handleClaimedRewards(e: ClaimedRewards): void {
   log.info("Claimed rewards handle with txHash: {}", [e.transaction.hash.toHexString()])
   const _totalRewards = e.params.lockupBaseReward.plus(e.params.lockupExtraReward).plus(e.params.unlockedReward)
   // Delegator load
@@ -313,7 +313,7 @@ export function handleClaimedRewards(e: ClaimedRewards): void {
     return;
   }
 
-    // Delegation load
+  // Delegation load
   let _delegationId = concatID(e.params.toValidatorID.toHexString(), e.params.delegator.toHexString())
   let delegation = Delegation.load(_delegationId)
   if (delegation == null) {
@@ -352,7 +352,6 @@ export function handleClaimedRewards(e: ClaimedRewards): void {
  * @param e 
  */
 export function handleRestakedRewards(e: RestakedRewards): void {
-
   log.info("Restake rewards handle with txHash: {}", [e.transaction.hash.toHexString()])
   const _totalRewards = e.params.lockupBaseReward.plus(e.params.lockupExtraReward).plus(e.params.unlockedReward)
   let _transactionId = concatID(e.transaction.hash.toHexString(), TransactionType.Restake.toString())
@@ -370,14 +369,79 @@ export function handleRestakedRewards(e: RestakedRewards): void {
   transaction.save()
 }
 
+/**
+ * Handle lockedup stake
+ * @param e 
+ */
+export function handleLockedUpStake(e: LockedUpStake): void {
+  log.info("LockedUpStake handle with txHash: {}", [e.transaction.hash.toHexString()])
+  // Lockedup load
+  let _lockedupId = concatID(e.params.delegator.toHexString(), e.params.validatorID.toHexString())
+  let lockedup = LockedUp.load(_lockedupId)
+  if (lockedup == null) {
+    lockedup = newLockedUp(_lockedupId)
+    lockedup.delegator = e.params.delegator.toHexString()
+    lockedup.validator = e.params.validatorID.toHexString()
+  }
+  lockedup.duration = e.params.duration
+  lockedup.lockedAmount = lockedup.lockedAmount.plus(e.params.amount)
 
-export function handleBurntFTM(event: BurntFTM): void {}
+  let _transactionId = concatID(e.transaction.hash.toHexString(), TransactionType.LockedUp.toString())
+  let transaction = newTransaction(_transactionId)
+  transaction.txHash = e.transaction.hash
+  transaction.type = BigInt.fromI32(TransactionType.LockedUp)
+  transaction.from = e.transaction.from
+  transaction.to = e.transaction.to
+  transaction.validatorId = e.params.validatorID
+  transaction.delegator = e.params.delegator
+  transaction.createdAt = e.block.timestamp
+  transaction.block = e.block.number
+  transaction.lockedAmount = e.params.amount
+  transaction.lockDuration = e.params.duration
+
+  lockedup.save()
+  transaction.save()
+}
+
+/**
+ * Handle unlocked stake event
+ * @param e 
+ */
+export function handleUnlockedStake(e: UnlockedStake): void {
+  log.info("UnlockedStake handle with txHash: {}", [e.transaction.hash.toHexString()])
+  // Lockedup load
+  let _lockedupId = concatID(e.params.delegator.toHexString(), e.params.validatorID.toHexString())
+  let lockedup = LockedUp.load(_lockedupId)
+  if (lockedup == null) {
+    log.error("unlockedStake: load lockedId failed with ID: {}, txHash: {}", [_lockedupId, e.transaction.hash.toHexString()])
+    return;
+  }
+  lockedup.unlockedAmount = lockedup.unlockedAmount.plus(e.params.amount)
+  lockedup.penalty = lockedup.penalty.plus(e.params.penalty)
+
+  let _transactionId = concatID(e.transaction.hash.toHexString(), TransactionType.Unlocked.toString())
+  let transaction = newTransaction(_transactionId)
+  transaction.txHash = e.transaction.hash
+  transaction.type = BigInt.fromI32(TransactionType.Unlocked)
+  transaction.from = e.transaction.from
+  transaction.to = e.transaction.to
+  transaction.validatorId = e.params.validatorID
+  transaction.delegator = e.params.delegator
+  transaction.createdAt = e.block.timestamp
+  transaction.block = e.block.number
+  transaction.unlockedAmount = e.params.amount
+  transaction.penaltyAmount = e.params.penalty
+
+  transaction.save()
+  lockedup.save()
+}
+
+
+export function handleBurntFTM(event: BurntFTM): void { }
 export function handleInflatedFTM(event: InflatedFTM): void { }
-export function handleLockedUpStake(event: LockedUpStake): void { }
 export function handleRefundedSlashedLegacyDelegation(
   event: RefundedSlashedLegacyDelegation
 ): void { }
-export function handleUnlockedStake(event: UnlockedStake): void { }
 export function handleUpdatedSlashingRefundRatio(
   event: UpdatedSlashingRefundRatio
 ): void { }

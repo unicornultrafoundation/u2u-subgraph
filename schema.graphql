@@ -32,13 +32,9 @@ type Delegation @entity {
   id: ID! #ID={validatorID}-{delegator}
   validatorId: BigInt! #Delegator for this validator
   delegator: Delegator! #Delegator
-  # createdOn: BigInt! #created on time
   stakedAmount: BigInt! #u2u amount staked
   wr: WithdrawalRequest!
   totalClaimedRewards: BigInt!
-  # claimedRewards: BigInt! #claimed rewards
-  # stashedRewards: BigInt! #stashed rewards
-  # expirationTime: BigInt! #expiration time
 }
 
 type Delegator @entity {
@@ -52,7 +48,7 @@ type Delegator @entity {
 
 type Validation @entity {
   id: ID! #ID={delegatorAddress}-{validatorId}
-  validatorId: Validator! #validator
+  validator: Validator! #validator
   stakedAmount: BigInt!
 }
 
@@ -81,6 +77,18 @@ type Transation @entity {
   undelegatedAmount: BigInt!
   withdrawalAmount: BigInt!
   wrID: BigInt!
+  lockedAmount: BigInt!
+  lockDuration: BigInt!
+  unlockedAmount: BigInt!
+  penaltyAmount: BigInt!
 }
 
-
+type LockedUp @entity {
+  id: ID!
+  delegator: Delegator!
+  validator: Validator!
+  duration: BigInt!
+  lockedAmount: BigInt!
+  unlockedAmount: BigInt!
+  penalty: BigInt!
+}
