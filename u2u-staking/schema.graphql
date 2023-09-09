@@ -25,8 +25,8 @@ type Validator @entity {
   createdEpoch: BigInt! #uint256
   createdTime: BigInt! #uint156
   delegations: [Delegation!]!
-  votingPower: BigInt!
   totalClaimedRewards: BigInt!
+  totalLockStake: BigInt!
 }
 
 type Delegation @entity {
@@ -53,6 +53,7 @@ type Validation @entity {
   id: ID! #ID={delegatorAddress}-{validatorId}
   validator: Validator! #validator
   stakedAmount: BigInt!
+  totalLockStake: BigInt!
 }
 
 type WithdrawalRequest @entity {
@@ -64,6 +65,8 @@ type WithdrawalRequest @entity {
   time: BigInt!
   unbondingAmount: BigInt!
   withdrawalAmount: BigInt!
+  withdrawHash: Bytes!
+  withdrawTime: BigInt!
 }
 
 type Transation @entity {
