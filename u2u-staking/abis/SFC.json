@@ -334,5 +334,21 @@
     ],
     "name": "Withdrawn",
     "type": "event"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "currentEpoch",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
   }
+
 ]

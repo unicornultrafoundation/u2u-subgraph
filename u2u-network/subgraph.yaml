@@ -1,0 +1,26 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: SFC
+    network: testnet
+    source:
+      address: "0xfc00face00000000000000000000000000000000"
+      abi: SFC
+      startBlock: 1
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Epoch
+      abis:
+        - name: SFC
+          file: ./abis/SFC.json
+      blockHandlers:
+        - handler: handleBlock
+        - handler: handleBlockWithCallToContract
+          filter:
+            kind: call
+      file: ./src/network.ts

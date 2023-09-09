@@ -1,0 +1,12 @@
+type Epoch @entity {
+  id: ID!
+  epoch: BigInt!
+  block: BigInt!
+  endTime: BigInt!
+  totalBaseReward: BigInt!
+  totalTxReward: BigInt!
+  totalStake: BigInt!
+  totalSupply: BigInt!
+  rewardPerSecond: BigInt!
+  epochFee: BigInt!
+}

@@ -6,6 +6,7 @@ type Staking @entity {
   totalValidator: BigInt! #Number of validator on network
   totalDelegator: BigInt! #Number of delegator already stake
   totalClaimedRewards: BigInt!
+  totalLockStake: BigInt!
 }
 
 type Validator @entity {
@@ -34,6 +35,7 @@ type Delegation @entity {
   delegator: Delegator! #Delegator
   stakedAmount: BigInt! #u2u amount staked
   wr: WithdrawalRequest!
+  lockedUp: LockedUp!
   totalClaimedRewards: BigInt!
 }
 
@@ -44,6 +46,7 @@ type Delegator @entity {
   createdOn: BigInt!
   validations: [Validation!]!
   totalClaimedRewards: BigInt!
+  totalLockStake: BigInt!
 }
 
 type Validation @entity {
@@ -60,6 +63,7 @@ type WithdrawalRequest @entity {
   wrID: BigInt!
   time: BigInt!
   unbondingAmount: BigInt!
+  withdrawalAmount: BigInt!
 }
 
 type Transation @entity {
@@ -84,11 +88,18 @@ type Transation @entity {
 }
 
 type LockedUp @entity {
-  id: ID!
+  id: ID! #ID={validatorID}-{delegator}
   delegator: Delegator!
   validator: Validator!
   duration: BigInt!
   lockedAmount: BigInt!
   unlockedAmount: BigInt!
   penalty: BigInt!
+  endTime: BigInt!
+}
+
+type Epoch @entity {
+  id: ID!
+  epoch: BigInt!
+  block: BigInt!
 }
