@@ -55,6 +55,7 @@ function validatorUpdate(e: Delegated, _delegationId: string): void {
   let _valDelegations = validator.delegations;
   if (!arrayContained(_valDelegations, _delegationId)) {
     _valDelegations.push(_delegationId)
+    validator.totalDelegator = validator.totalDelegator.plus(ONE_BI)
   }
   validator.delegations = _valDelegations;
 

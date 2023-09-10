@@ -27,6 +27,7 @@ export function newValidator(_valId: BigInt): Validator {
   validator.delegations = []
   validator.totalClaimedRewards = ZERO_BI
   validator.totalLockStake = ZERO_BI
+  validator.totalDelegator = ZERO_BI
   return validator
 }
 

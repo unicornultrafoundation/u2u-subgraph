@@ -27,6 +27,7 @@ type Validator @entity {
   delegations: [Delegation!]!
   totalClaimedRewards: BigInt!
   totalLockStake: BigInt!
+  totalDelegator: BigInt!
 }
 
 type Delegation @entity {
