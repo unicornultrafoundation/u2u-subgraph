@@ -2,7 +2,7 @@ import { ethereum, log, BigInt } from "@graphprotocol/graph-ts"
 import {
   SFC
 } from "../generated/SFC/SFC"
-import { STAKING_ADDRESS } from "./helper"
+import { ONE_BI, STAKING_ADDRESS } from "./helper"
 import { newEpoch } from "./initialize"
 import { Epoch } from "../generated/schema"
 
@@ -15,16 +15,23 @@ export function handleBlock(block: ethereum.Block): void {
   let currenEpochResult = stakingSMC.try_currentEpoch()
   if (currenEpochResult.reverted) {
     log.error("get currenEpochResult reverted", [])
-    return
+    return;
   }
   let currentEpochID = currenEpochResult.value
-  let epochEntity = Epoch.load(currentEpochID.toString())
-  if (epochEntity == null) {
-    epochEntity = newEpoch(block.number.toString())
-    epochEntity.epoch = currentEpochID
+  if(currentEpochID.isZero()) {
+    log.error("Epoch zero", [])
+    return;
   }
+  let lastEpoch = currentEpochID.minus(ONE_BI)
+  log.info("Epoch handle with currentEpoch: {}, lastEpoch: {}", [currentEpochID.toString(), lastEpoch.toString()])
+  let epochEntity = Epoch.load(lastEpoch.toHexString())
+  if (epochEntity != null) {
+    return
+  }
+  epochEntity = newEpoch(lastEpoch.toHexString())
+  epochEntity.epoch = lastEpoch
   epochEntity.block = block.number
-  let epochSnapshotResult = stakingSMC.try_getEpochSnapshot(currentEpochID)
+  let epochSnapshotResult = stakingSMC.try_getEpochSnapshot(lastEpoch)
   if (epochSnapshotResult.reverted) {
     log.error("get epochSnapshotResult reverted", [])
     return
