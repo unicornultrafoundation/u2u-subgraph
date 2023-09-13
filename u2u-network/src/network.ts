@@ -30,7 +30,7 @@ export function handleBlock(block: ethereum.Block): void {
   }
   epochEntity = newEpoch(lastEpoch.toHexString())
   epochEntity.epoch = lastEpoch
-  epochEntity.block = block.number
+  epochEntity.block = block.number.minus(ONE_BI)
   let epochSnapshotResult = stakingSMC.try_getEpochSnapshot(lastEpoch)
   if (epochSnapshotResult.reverted) {
     log.error("get epochSnapshotResult reverted", [])
