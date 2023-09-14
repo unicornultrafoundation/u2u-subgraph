@@ -9,3 +9,8 @@ export let TWO_BI = BigInt.fromI32(2)
 export let HUNDRED_BI = BigInt.fromI32(10000)
 
 export let EMPTY_STRING = "";
+
+
+export function concatID(str1: string, str2: string): string {
+  return str1.concat("-").concat(str2);
+}

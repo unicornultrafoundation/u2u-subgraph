@@ -1,4 +1,4 @@
-import { Epoch } from "../generated/schema"
+import { Epoch, Validator } from "../generated/schema"
 import { ZERO_BI } from "./helper"
 
 /**
@@ -18,3 +18,12 @@ export function newEpoch(_epochId: string): Epoch {
   epoch.epochFee = ZERO_BI
   return epoch
 }
+
+export function newValidator(_validator: string): Validator {
+  let validator = new Validator(_validator)
+  validator.receivedStake = ZERO_BI
+  validator.accumulatedRewardPerToken = ZERO_BI
+  validator.validatorId = ZERO_BI
+  validator.epochId = ZERO_BI
+  return validator
+} 
