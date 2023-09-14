@@ -2,7 +2,7 @@ import { ethereum, log, BigInt } from "@graphprotocol/graph-ts"
 import {
   SFC
 } from "../generated/SFC/SFC"
-import { ONE_BI, STAKING_ADDRESS, concatID } from "./helper"
+import { DECIMAL_BI, ONE_BI, STAKING_ADDRESS, ZERO_BI, concatID } from "./helper"
 import { newEpoch, newValidator } from "./initialize"
 import { Epoch, Validator } from "../generated/schema"
 
@@ -22,16 +22,16 @@ export function handleBlock(block: ethereum.Block): void {
     log.error("Epoch zero", [])
     return;
   }
-  let lastEpoch = currentEpochID.minus(ONE_BI)
-  log.info("Epoch handle with currentEpoch: {}, lastEpoch: {}", [currentEpochID.toString(), lastEpoch.toString()])
-  let epochEntity = Epoch.load(lastEpoch.toHexString())
+  let _lastEpoch = currentEpochID.minus(ONE_BI)
+  log.info("Epoch handle with currentEpoch: {}, lastEpoch: {}", [currentEpochID.toString(), _lastEpoch.toString()])
+  let epochEntity = Epoch.load(_lastEpoch.toHexString())
   if (epochEntity != null) {
     return
   }
-  epochEntity = newEpoch(lastEpoch.toHexString())
-  epochEntity.epoch = lastEpoch
+  epochEntity = newEpoch(_lastEpoch.toHexString())
+  epochEntity.epoch = _lastEpoch
   epochEntity.block = block.number.minus(ONE_BI)
-  let epochSnapshotResult = stakingSMC.try_getEpochSnapshot(lastEpoch)
+  let epochSnapshotResult = stakingSMC.try_getEpochSnapshot(_lastEpoch)
   if (epochSnapshotResult.reverted) {
     log.error("get epochSnapshotResult reverted", [])
     return
@@ -44,18 +44,21 @@ export function handleBlock(block: ethereum.Block): void {
   epochEntity.totalSupply = epochSnapshot.getTotalSupply()
   epochEntity.rewardPerSecond = epochSnapshot.getBaseRewardPerSecond()
   epochEntity.epochFee = epochSnapshot.getEpochFee()
-  log.info("Handle new epoch with, EndTime: {}, TotalBaseReward: {}, TotalTxReward: {}, totalStake:{}, totalSupply:{}, rewardPerSecond:{}, epochFee:{}",
-    [
-      epochSnapshot.getEndTime().toString(),
-      epochSnapshot.getTotalBaseRewardWeight().toString(),
-      epochSnapshot.getTotalTxRewardWeight().toString(),
-      epochSnapshot.getTotalStake().toString(),
-      epochSnapshot.getTotalSupply().toString(),
-      epochSnapshot.getBaseRewardPerSecond().toString(),
-      epochSnapshot.getEpochFee().toString()
-    ])
+  let _epochRewards = ZERO_BI
+  if (_lastEpoch.gt(ONE_BI)) {
+    let _prevEpoch = Epoch.load(_lastEpoch.minus(ONE_BI).toHexString())
+    if (_prevEpoch != null) {
+      let _epochTimeSeconds = ZERO_BI
+      if (epochSnapshot.getEndTime().gt(_prevEpoch.endTime)) {
+        _epochTimeSeconds = epochSnapshot.getEndTime().minus(_prevEpoch.endTime)
+      }
+      _epochRewards = _epochTimeSeconds.times(epochSnapshot.getBaseRewardPerSecond()).plus(epochSnapshot.getEpochFee())
+      epochEntity.epochRewards = _epochRewards
+      epochEntity.totalRewards = _prevEpoch.totalRewards.plus(_epochRewards)
+    }
+  }
   epochEntity.save()
-  updateValidators(lastEpoch)
+  updateValidators(_lastEpoch)
 }
 
 function updateValidators (epochId: BigInt): void {
@@ -80,8 +83,27 @@ function _updateValidator (epochId: BigInt, validatorId: BigInt): void {
     valEntity.validatorId = validatorId
     valEntity.epochId = epochId
   }
-  valEntity.receivedStake = valEntity.receivedStake.plus(_receivedStake.value)
-  valEntity.accumulatedRewardPerToken = valEntity.accumulatedRewardPerToken.plus(_accumulatedRewardPerToken.value)
+  valEntity.receivedStake = _receivedStake.value
+  valEntity.accumulatedRewardPerToken = _accumulatedRewardPerToken.value
+  let _totalEpochRewards = _receivedStake.value.times(_accumulatedRewardPerToken.value).div(DECIMAL_BI)
+  if (epochId.gt(ONE_BI)) {
+    let _prevId =  concatID((epochId.minus(ONE_BI)).toHexString(), validatorId.toHexString())
+    let _prevEpoch = Validator.load(_prevId)
+    if (_prevEpoch != null) {
+      let _prevTotalEpochRewards = _prevEpoch.totalRewards
+      valEntity.epochRewards = _totalEpochRewards.minus(_prevTotalEpochRewards)
+    }
+  } else {
+    valEntity.epochRewards = _totalEpochRewards;
+  }
+  valEntity.totalRewards = _totalEpochRewards;
+  let epochEntity = Epoch.load(epochId.toHexString())
+  if (epochEntity != null) {
+    let _validators = epochEntity.validators
+    _validators.push(_entityId)
+    epochEntity.validators = _validators
+    epochEntity.save()
+  }
   valEntity.save()
 }
 
@@ -94,4 +116,3 @@ function getEpochValidators(epochId: BigInt) : BigInt[] {
   }
   return validators.value
 }
-

@@ -9,6 +9,9 @@ type Epoch @entity {
   totalSupply: BigInt!
   rewardPerSecond: BigInt!
   epochFee: BigInt!
+  epochRewards: BigInt!
+  totalRewards: BigInt!
+  validators: [Validator!]!
 }
 
 type Validator @entity {
@@ -17,4 +20,6 @@ type Validator @entity {
   accumulatedRewardPerToken: BigInt!
   epochId: BigInt!
   validatorId: BigInt!
+  epochRewards: BigInt!
+  totalRewards: BigInt!
 }

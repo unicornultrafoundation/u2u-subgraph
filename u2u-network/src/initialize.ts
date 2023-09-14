@@ -16,6 +16,9 @@ export function newEpoch(_epochId: string): Epoch {
   epoch.totalSupply = ZERO_BI
   epoch.rewardPerSecond = ZERO_BI
   epoch.epochFee = ZERO_BI
+  epoch.epochRewards = ZERO_BI
+  epoch.totalRewards = ZERO_BI
+  epoch.validators = []
   return epoch
 }
 
@@ -25,5 +28,7 @@ export function newValidator(_validator: string): Validator {
   validator.accumulatedRewardPerToken = ZERO_BI
   validator.validatorId = ZERO_BI
   validator.epochId = ZERO_BI
+  validator.epochRewards = ZERO_BI
+  validator.totalRewards = ZERO_BI
   return validator
 } 

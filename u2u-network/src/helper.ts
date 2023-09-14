@@ -8,6 +8,8 @@ export let ONE_BI = BigInt.fromI32(1)
 export let TWO_BI = BigInt.fromI32(2)
 export let HUNDRED_BI = BigInt.fromI32(10000)
 
+export let DECIMAL_BI = BigInt.fromI64(1000000000000000000)
+
 export let EMPTY_STRING = "";
 
 
