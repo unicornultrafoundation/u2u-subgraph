@@ -64,11 +64,13 @@ function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC)
     epochEntity.totalRewards = network.totalRewards.plus(_epochRewards)
     network.totalRewards = network.totalRewards.plus(_epochRewards)
 
-    let lastBlockEpoch = BlockEntity.load(network.lastEpochBlock.plus(ONE_BI).toString())
-    let currentBlockEpoch = BlockEntity.load(block.number.minus(ONE_BI).toString())
-
-    if (lastBlockEpoch != null && currentBlockEpoch != null) {
-      epochEntity.epochBurntFees = currentBlockEpoch.totalBurntFees.minus(lastBlockEpoch.totalBurntFees)
+    let _privEpoch = Epoch.load(_lastEpoch.minus(ONE_BI).toHexString())
+    if (_privEpoch != null) {
+      let lastBlockEpoch = BlockEntity.load(_privEpoch.block.plus(ONE_BI).toHexString())
+      let currentBlockEpoch = BlockEntity.load(block.number.minus(ONE_BI).toHexString())
+      if (lastBlockEpoch != null && currentBlockEpoch != null) {
+        epochEntity.epochBurntFees = currentBlockEpoch.totalBurntFees.minus(lastBlockEpoch.totalBurntFees)
+      }
     }
   }
   network.lastEpochEndTime = epochSnapshot.getEndTime()
@@ -78,7 +80,7 @@ function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC)
 }
 
 function updateBlock(block: ethereum.Block, currentEpoch: BigInt): void {
-  let blockEntity = newBlock(block.number.toString())
+  let blockEntity = newBlock(block.number.toHexString())
   blockEntity.epoch = currentEpoch
   blockEntity.blockNumber = block.number
   blockEntity.gasUsed = block.gasUsed
