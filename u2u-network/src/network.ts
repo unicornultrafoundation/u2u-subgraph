@@ -91,8 +91,8 @@ function updateBlock(block: ethereum.Block, currentEpoch: BigInt): void {
   if (_bassFee) {
     let _burntFees = _bassFee.times(block.gasUsed).times(HUNDRED_BI).div(FIVE_BI)
     blockEntity.burntFees = _burntFees
-    if (block.number.gt(ZERO_BI)) {
-      let lastBlock = BlockEntity.load(block.number.minus(ONE_BI).toString())
+    if (block.number.gt(ONE_BI)) {
+      let lastBlock = BlockEntity.load(block.number.minus(ONE_BI).toHexString())
       if (lastBlock != null) {
         let lastBurntFees = lastBlock.totalBurntFees
         blockEntity.totalBurntFees = lastBurntFees.plus(_burntFees)
