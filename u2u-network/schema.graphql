@@ -12,7 +12,7 @@ type Epoch @entity {
   epochRewards: BigInt!
   totalRewards: BigInt!
   validators: [Validator!]!
-  epochBurntFees: BigInt!
+  # epochBurntFees: BigInt!
 }
 
 type Validator @entity {
@@ -25,23 +25,23 @@ type Validator @entity {
   totalRewards: BigInt!
 }
 
-type Block @entity {
-  id: ID!
-  epoch: BigInt!
-  blockNumber: BigInt!
-  gasUsed: BigInt!
-  baseFeePerGas: BigInt
-  timestamp: BigInt!
-  burntFees: BigInt!
-  totalBurntFees: BigInt!
-}
+# type Block @entity {
+#   id: ID!
+#   epoch: BigInt!
+#   blockNumber: BigInt!
+#   gasUsed: BigInt!
+#   baseFeePerGas: BigInt
+#   timestamp: BigInt!
+#   burntFees: BigInt!
+#   totalBurntFees: BigInt!
+# }
 
-type Network @entity {
-  id: ID!
-  lastBlock: BigInt!
-  lastEpoch: BigInt!
-  totalBurntFees: BigInt!
-  totalRewards: BigInt!
-  lastEpochEndTime: BigInt!
-  lastEpochBlock: BigInt!
-}
+# type Network @entity {
+#   id: ID!
+#   lastBlock: BigInt!
+#   lastEpoch: BigInt!
+#   totalBurntFees: BigInt!
+#   totalRewards: BigInt!
+#   lastEpochEndTime: BigInt!
+#   lastEpochBlock: BigInt!
+# }
