@@ -3,7 +3,7 @@ import {
   SFC
 } from "../generated/SFC/SFC"
 import { DECIMAL_BI, ONE_BI, STAKING_ADDRESS, ZERO_BI, concatID } from "./helper"
-import { newEpoch, newValidator } from "./initialize"
+import { loadEpochCounter, loadValidatorCounter, newEpoch, newValidator } from "./initialize"
 import { Epoch, Validator } from "../generated/schema"
 
 
@@ -35,6 +35,10 @@ function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC)
     return
   }
   epochEntity = newEpoch(_lastEpoch.toHexString())
+  // update epoch counter
+  let epochCounter = loadEpochCounter()
+  epochCounter.total = epochCounter.total.plus(ONE_BI)
+
   epochEntity.epoch = _lastEpoch
   epochEntity.block = block.number.minus(ONE_BI)
   let epochSnapshotResult = stakingSMC.try_getEpochSnapshot(_lastEpoch)
@@ -64,6 +68,7 @@ function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC)
     }
   }
   epochEntity.save()
+  epochCounter.save()
 }
 
 function updateValidators(epochId: BigInt): void {
@@ -87,6 +92,10 @@ function _updateValidator(epochId: BigInt, validatorId: BigInt): void {
     valEntity = newValidator(_entityId)
     valEntity.validatorId = validatorId
     valEntity.epoch = epochId.toHexString()
+    // Validator counter
+    let validatorCounter = loadValidatorCounter(validatorId.toHexString())
+    validatorCounter.total = validatorCounter.total.plus(ONE_BI)
+    validatorCounter.save()
   }
   valEntity.receivedStake = _receivedStake.value
   valEntity.accumulatedRewardPerToken = _accumulatedRewardPerToken.value

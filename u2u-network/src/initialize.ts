@@ -1,5 +1,5 @@
-import { Epoch, Validator } from "../generated/schema"
-import { EMPTY_STRING, ZERO_BI } from "./helper"
+import { Epoch, EpochCounter, Validator, ValidatorCounter } from "../generated/schema"
+import { EMPTY_STRING, ONE_BI, ZERO_BI } from "./helper"
 
 /**
  * Initialize new Epoch entity
@@ -32,3 +32,22 @@ export function newValidator(_validator: string): Validator {
   validator.totalRewards = ZERO_BI
   return validator
 } 
+
+export function loadEpochCounter(): EpochCounter {
+  let _id = ONE_BI.toHexString()
+  let counter = EpochCounter.load(_id)
+  if (counter == null) {
+    counter = new EpochCounter(_id)
+    counter.total = ZERO_BI
+  }
+  return counter
+}
+
+export function loadValidatorCounter(_id: string): ValidatorCounter {
+  let counter = ValidatorCounter.load(_id)
+  if (counter == null) {
+    counter = new ValidatorCounter(_id)
+    counter.total = ZERO_BI
+  }
+  return counter
+}

@@ -23,3 +23,13 @@ type Validator @entity {
   epochRewards: BigInt!
   totalRewards: BigInt!
 }
+
+type EpochCounter @entity {
+  id: ID!
+  total: BigInt!
+}
+
+type ValidatorCounter @entity {
+  id: ID!
+  total: BigInt!
+}
