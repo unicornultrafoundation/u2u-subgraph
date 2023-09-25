@@ -2,7 +2,7 @@ import { ethereum, log, BigInt } from "@graphprotocol/graph-ts"
 import {
   SFC
 } from "../generated/SFC/SFC"
-import { DECIMAL_BI, FIVE_BI, HUNDRED_BI, ONE_BI, STAKING_ADDRESS, ZERO_BI, concatID } from "./helper"
+import { DECIMAL_BI, ONE_BI, STAKING_ADDRESS, ZERO_BI, concatID } from "./helper"
 import { newEpoch, newValidator } from "./initialize"
 import { Epoch, Validator } from "../generated/schema"
 
@@ -22,8 +22,7 @@ export function handleBlock(block: ethereum.Block): void {
     log.error("Epoch zero", [])
     return;
   }
-  // Update block
-  // updateBlock(block, currentEpochID)
+  
   let _lastEpoch = currentEpochID.minus(ONE_BI)
   log.info("Epoch handle with currentEpoch: {}, lastEpoch: {}", [currentEpochID.toString(), _lastEpoch.toString()])
   updateEpoch(_lastEpoch, block, stakingSMC)
@@ -43,8 +42,6 @@ function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC)
     log.error("get epochSnapshotResult reverted", [])
     return
   }
-  // let network = loadNetwork()
-  // network.lastEpoch = _lastEpoch
   let epochSnapshot = epochSnapshotResult.value
   epochEntity.endTime = epochSnapshot.getEndTime()
   epochEntity.totalBaseReward = epochSnapshot.getTotalBaseRewardWeight()
@@ -64,41 +61,10 @@ function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC)
       _epochRewards = _epochTimeSeconds.times(epochSnapshot.getBaseRewardPerSecond()).plus(epochSnapshot.getEpochFee())
       epochEntity.epochRewards = _epochRewards
       epochEntity.totalRewards = _privEpoch.totalRewards.plus(_epochRewards)
-
     }
-
   }
   epochEntity.save()
 }
-
-// function updateBlock(block: ethereum.Block, currentEpoch: BigInt): void {
-//   let blockEntity = newBlock(block.number.toHexString())
-//   blockEntity.epoch = currentEpoch
-//   blockEntity.blockNumber = block.number
-//   blockEntity.gasUsed = block.gasUsed
-//   blockEntity.baseFeePerGas = block.baseFeePerGas
-//   blockEntity.timestamp = block.timestamp
-//   let network = loadNetwork()
-//   let _bassFee = block.baseFeePerGas !== null ? block.baseFeePerGas : ZERO_BI
-//   if (_bassFee) {
-//     let _burntFees = _bassFee.times(block.gasUsed).times(HUNDRED_BI).div(FIVE_BI)
-//     blockEntity.burntFees = _burntFees
-//     if (block.number.gt(ONE_BI)) {
-//       let lastBlock = BlockEntity.load(block.number.minus(ONE_BI).toHexString())
-//       if (lastBlock != null) {
-//         let lastBurntFees = lastBlock.totalBurntFees
-//         blockEntity.totalBurntFees = lastBurntFees.plus(_burntFees)
-//         network.totalBurntFees = network.totalBurntFees.plus(_burntFees)
-//       }
-//     } else {
-//       blockEntity.totalBurntFees = _burntFees
-//       network.totalBurntFees = _burntFees
-//     }
-//   }
-//   network.lastBlock = block.number
-//   network.save()
-//   blockEntity.save()
-// }
 
 function updateValidators(epochId: BigInt): void {
   let _validators = getEpochValidators(epochId)
@@ -120,7 +86,7 @@ function _updateValidator(epochId: BigInt, validatorId: BigInt): void {
   if (valEntity == null) {
     valEntity = newValidator(_entityId)
     valEntity.validatorId = validatorId
-    valEntity.epochId = epochId
+    valEntity.epoch = epochId.toHexString()
   }
   valEntity.receivedStake = _receivedStake.value
   valEntity.accumulatedRewardPerToken = _accumulatedRewardPerToken.value
