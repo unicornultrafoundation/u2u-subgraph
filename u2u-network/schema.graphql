@@ -12,36 +12,24 @@ type Epoch @entity {
   epochRewards: BigInt!
   totalRewards: BigInt!
   validators: [Validator!]!
-  epochBurntFees: BigInt!
 }
 
 type Validator @entity {
   id: ID!
   receivedStake: BigInt!
   accumulatedRewardPerToken: BigInt!
-  epochId: BigInt!
+  epoch: Epoch!
   validatorId: BigInt!
   epochRewards: BigInt!
   totalRewards: BigInt!
 }
 
-type Block @entity {
+type EpochCounter @entity {
   id: ID!
-  epoch: BigInt!
-  blockNumber: BigInt!
-  gasUsed: BigInt!
-  baseFeePerGas: BigInt
-  timestamp: BigInt!
-  burntFees: BigInt!
-  totalBurntFees: BigInt!
+  total: BigInt!
 }
 
-type Network @entity {
+type ValidatorCounter @entity {
   id: ID!
-  lastBlock: BigInt!
-  lastEpoch: BigInt!
-  totalBurntFees: BigInt!
-  totalRewards: BigInt!
-  lastEpochEndTime: BigInt!
-  lastEpochBlock: BigInt!
+  total: BigInt!
 }
