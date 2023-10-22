@@ -69,6 +69,6 @@ function transactionUpdate(e: ClaimedRewards, _totalRewards: BigInt): void {
   if (txCount === null) {
     txCount = newTransactionCount(e.transaction.from.toHexString())
   }
-  txCount.count.plus(ONE_BI)
+  txCount.count = txCount.count.plus(ONE_BI)
   txCount.save()
 }

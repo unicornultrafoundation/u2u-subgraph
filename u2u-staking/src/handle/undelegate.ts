@@ -114,6 +114,6 @@ function transactionUpdate(e: Undelegated): void {
   if (txCount === null) {
     txCount = newTransactionCount(e.transaction.from.toHexString())
   }
-  txCount.count.plus(ONE_BI)
+  txCount.count = txCount.count.plus(ONE_BI)
   txCount.save()
 }

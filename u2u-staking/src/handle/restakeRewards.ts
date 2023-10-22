@@ -107,6 +107,6 @@ function transactionUpdate(e: RestakedRewards, _totalRewards: BigInt, _lockupRew
   if (txCount === null) {
     txCount = newTransactionCount(e.transaction.from.toHexString())
   }
-  txCount.count.plus(ONE_BI)
+  txCount.count = txCount.count.plus(ONE_BI)
   txCount.save()
 }
