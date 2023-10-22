@@ -95,9 +95,9 @@ function transactionUpdate(e: LockedUpStake): void {
   transaction.lockDuration = e.params.duration
   transaction.save()
 
-  let txCount = TransactionCount.load(e.transaction.from.toString())
+  let txCount = TransactionCount.load(e.transaction.from.toHexString())
   if (txCount === null) {
-    txCount = newTransactionCount(e.transaction.from.toString())
+    txCount = newTransactionCount(e.transaction.from.toHexString())
   }
   txCount.count.plus(ONE_BI)
   txCount.save()
