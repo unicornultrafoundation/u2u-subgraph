@@ -1,8 +1,8 @@
 import { log, BigInt } from "@graphprotocol/graph-ts"
 import { Delegated } from "../../generated/SFC/SFC"
-import { loadStaking, loadValidator, newDelegation, newDelegator, newTransaction, newValidation } from "../initialize"
+import { loadStaking, loadValidator, newDelegation, newDelegator, newTransaction, newTransactionCount, newValidation } from "../initialize"
 import { ONE_BI, TransactionType, arrayContained, concatID, isEqual } from "../helper"
-import { Delegation, Delegator, Validation } from "../../generated/schema"
+import { Delegation, Delegator, TransactionCount, Validation } from "../../generated/schema"
 
 export function delegate(e: Delegated): void {
   log.info("Delegated handle with txHash: {}", [e.transaction.hash.toHexString()])
@@ -97,4 +97,11 @@ function transactionUpdate(e: Delegated): void {
   transaction.block = e.block.number
   transaction.stakedAmount = e.params.amount
   transaction.save()
+
+  let txCount = TransactionCount.load(e.transaction.from.toString())
+  if (txCount === null) {
+    txCount = newTransactionCount(e.transaction.from.toString())
+  }
+  txCount.count.plus(ONE_BI)
+  txCount.save()
 }

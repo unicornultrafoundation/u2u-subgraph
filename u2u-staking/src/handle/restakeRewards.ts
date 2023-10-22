@@ -1,8 +1,8 @@
 import { log, BigInt } from "@graphprotocol/graph-ts"
 import { RestakedRewards } from "../../generated/SFC/SFC"
-import { TransactionType, concatID } from "../helper"
-import { loadStaking, loadValidator, newLockedUp, newTransaction } from "../initialize"
-import { Delegation, Delegator, LockedUp, Validation } from "../../generated/schema"
+import { ONE_BI, TransactionType, concatID } from "../helper"
+import { loadStaking, loadValidator, newLockedUp, newTransaction, newTransactionCount } from "../initialize"
+import { Delegation, Delegator, LockedUp, TransactionCount, Validation } from "../../generated/schema"
 
 /**
  * Handle restake rewards
@@ -102,4 +102,11 @@ function transactionUpdate(e: RestakedRewards, _totalRewards: BigInt, _lockupRew
   transaction.stakedAmount = _totalRewards
   transaction.lockedAmount = _lockupReward
   transaction.save()
+
+  let txCount = TransactionCount.load(e.transaction.from.toString())
+  if (txCount === null) {
+    txCount = newTransactionCount(e.transaction.from.toString())
+  }
+  txCount.count.plus(ONE_BI)
+  txCount.save()
 }

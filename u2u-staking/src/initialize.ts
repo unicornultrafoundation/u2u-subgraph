@@ -1,5 +1,5 @@
 import { BigInt, log } from "@graphprotocol/graph-ts";
-import { Delegation, Delegator, LockedUp, Staking, Transation, Validation, Validator, WithdrawalRequest } from "../generated/schema";
+import { Delegation, Delegator, LockedUp, Staking, TransactionCount, Transation, Validation, Validator, WithdrawalRequest } from "../generated/schema";
 import { EMPTY_STRING, ONE_BI, ZERO_BI, ZERO_BYTES } from "./helper";
 
 /**
@@ -138,6 +138,12 @@ export function newTransaction(id: string): Transation {
   transaction.lockDuration = ZERO_BI
   transaction.unlockedAmount = ZERO_BI
   transaction.penaltyAmount = ZERO_BI
+  return transaction
+}
+
+export function newTransactionCount(id: string): TransactionCount {
+  let transaction = new TransactionCount(id)
+  transaction.count = ZERO_BI
   return transaction
 }
 

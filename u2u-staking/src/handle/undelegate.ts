@@ -1,8 +1,8 @@
 import { log, BigInt } from "@graphprotocol/graph-ts"
 import { Undelegated } from "../../generated/SFC/SFC"
-import { loadStaking, loadValidator, newTransaction, newWithdrawalRequest } from "../initialize"
-import { TransactionType, concatID, isEqual } from "../helper"
-import { Delegation, Delegator, Validation, WithdrawalRequest } from "../../generated/schema"
+import { loadStaking, loadValidator, newTransaction, newTransactionCount, newWithdrawalRequest } from "../initialize"
+import { ONE_BI, TransactionType, concatID, isEqual } from "../helper"
+import { Delegation, Delegator, TransactionCount, Validation, WithdrawalRequest } from "../../generated/schema"
 
 export function undelegate(e: Undelegated): void {
   log.info("Undelegated handle with txHash: {}", [e.transaction.hash.toHexString()])
@@ -109,4 +109,11 @@ function transactionUpdate(e: Undelegated): void {
   transaction.undelegatedAmount = e.params.amount
   transaction.wrID = e.params.wrID
   transaction.save()
+
+  let txCount = TransactionCount.load(e.transaction.from.toString())
+  if (txCount === null) {
+    txCount = newTransactionCount(e.transaction.from.toString())
+  }
+  txCount.count.plus(ONE_BI)
+  txCount.save()
 }

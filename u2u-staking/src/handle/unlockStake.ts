@@ -1,8 +1,8 @@
 import { log, BigInt } from "@graphprotocol/graph-ts";
 import { UnlockedStake } from "../../generated/SFC/SFC";
-import { TransactionType, concatID } from "../helper";
-import { Delegator, LockedUp, Validation } from "../../generated/schema";
-import { loadStaking, loadValidator, newTransaction } from "../initialize";
+import { ONE_BI, TransactionType, concatID } from "../helper";
+import { Delegator, LockedUp, TransactionCount, Validation } from "../../generated/schema";
+import { loadStaking, loadValidator, newTransaction, newTransactionCount } from "../initialize";
 
 /**
  * Handle unlocked stake event
@@ -82,4 +82,11 @@ function transactionUpdate(e: UnlockedStake): void {
   transaction.penaltyAmount = e.params.penalty
 
   transaction.save()
+
+  let txCount = TransactionCount.load(e.transaction.from.toString())
+  if (txCount === null) {
+    txCount = newTransactionCount(e.transaction.from.toString())
+  }
+  txCount.count.plus(ONE_BI)
+  txCount.save()
 }

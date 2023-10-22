@@ -1,8 +1,8 @@
 import { log, BigInt } from "@graphprotocol/graph-ts"
 import { Withdrawn } from "../../generated/SFC/SFC"
-import { TransactionType, concatID } from "../helper"
-import { WithdrawalRequest } from "../../generated/schema"
-import { newTransaction } from "../initialize"
+import { ONE_BI, TransactionType, concatID } from "../helper"
+import { TransactionCount, WithdrawalRequest } from "../../generated/schema"
+import { newTransaction, newTransactionCount } from "../initialize"
 
 /**
  * Withdrawn event handle
@@ -44,4 +44,11 @@ function transactionUpdate(e: Withdrawn): void {
   transaction.wrID = e.params.wrID
   transaction.withdrawalAmount = e.params.amount
   transaction.save()
+
+  let txCount = TransactionCount.load(e.transaction.from.toString())
+  if (txCount === null) {
+    txCount = newTransactionCount(e.transaction.from.toString())
+  }
+  txCount.count.plus(ONE_BI)
+  txCount.save()
 }

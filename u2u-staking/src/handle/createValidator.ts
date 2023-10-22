@@ -1,7 +1,7 @@
 import { log, BigInt } from "@graphprotocol/graph-ts";
 import { CreatedValidator } from "../../generated/SFC/SFC";
-import { Validator } from "../../generated/schema";
-import { loadStaking, newTransaction, newValidator } from "../initialize";
+import { TransactionCount, Validator } from "../../generated/schema";
+import { loadStaking, newTransaction, newTransactionCount, newValidator } from "../initialize";
 import { ONE_BI, TransactionType, concatID } from "../helper";
 
 export function createdValidator(e: CreatedValidator): void {
@@ -38,4 +38,11 @@ function transactionUpdate(e: CreatedValidator): void {
   transaction.block = e.block.number
   transaction.stakedAmount = e.transaction.value
   transaction.save()
+  
+  let txCount = TransactionCount.load(e.transaction.from.toString())
+  if (txCount === null) {
+    txCount = newTransactionCount(e.transaction.from.toString())
+  }
+  txCount.count.plus(ONE_BI)
+  txCount.save()
 }

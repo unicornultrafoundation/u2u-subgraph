@@ -91,6 +91,11 @@ type Transation @entity {
   penaltyAmount: BigInt!
 }
 
+type TransactionCount @entity {
+  id: ID!
+  count: BigInt!
+}
+
 type LockedUp @entity {
   id: ID! #ID={validatorID}-{delegator}
   delegator: Delegator!

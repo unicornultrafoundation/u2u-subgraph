@@ -1,8 +1,8 @@
 import { log, BigInt } from "@graphprotocol/graph-ts"
 import { ClaimedRewards } from "../../generated/SFC/SFC"
-import { Delegation, Delegator, Validator } from "../../generated/schema"
-import { TransactionType, concatID } from "../helper"
-import { loadStaking, newTransaction } from "../initialize"
+import { Delegation, Delegator, TransactionCount, Validator } from "../../generated/schema"
+import { ONE_BI, TransactionType, concatID } from "../helper"
+import { loadStaking, newTransaction, newTransactionCount } from "../initialize"
 
 /**
  * Claimed rewards event handle
@@ -64,4 +64,11 @@ function transactionUpdate(e: ClaimedRewards, _totalRewards: BigInt): void {
   transaction.block = e.block.number
   transaction.claimedAmount = _totalRewards
   transaction.save()
+
+  let txCount = TransactionCount.load(e.transaction.from.toString())
+  if (txCount === null) {
+    txCount = newTransactionCount(e.transaction.from.toString())
+  }
+  txCount.count.plus(ONE_BI)
+  txCount.save()
 }

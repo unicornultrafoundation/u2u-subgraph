@@ -1,8 +1,8 @@
 import { log, BigInt } from "@graphprotocol/graph-ts"
 import { LockedUpStake } from "../../generated/SFC/SFC"
-import { TransactionType, concatID } from "../helper"
-import { Delegation, Delegator, LockedUp, Validation } from "../../generated/schema"
-import { loadStaking, loadValidator, newLockedUp, newTransaction } from "../initialize"
+import { ONE_BI, TransactionType, concatID } from "../helper"
+import { Delegation, Delegator, LockedUp, TransactionCount, Validation } from "../../generated/schema"
+import { loadStaking, loadValidator, newLockedUp, newTransaction, newTransactionCount } from "../initialize"
 
 /**
  * Handle lockedup stake
@@ -94,4 +94,11 @@ function transactionUpdate(e: LockedUpStake): void {
   transaction.lockedAmount = e.params.amount
   transaction.lockDuration = e.params.duration
   transaction.save()
+
+  let txCount = TransactionCount.load(e.transaction.from.toString())
+  if (txCount === null) {
+    txCount = newTransactionCount(e.transaction.from.toString())
+  }
+  txCount.count.plus(ONE_BI)
+  txCount.save()
 }
