@@ -3,6 +3,7 @@ import { ClaimedRewards } from "../../generated/SFC/SFC"
 import { Delegation, Delegator, TransactionCount, Validator } from "../../generated/schema"
 import { ONE_BI, TransactionType, concatID } from "../helper"
 import { loadStaking, newTransaction, newTransactionCount } from "../initialize"
+import { stashRewards } from "./stashRewards"
 
 /**
  * Claimed rewards event handle
@@ -12,6 +13,20 @@ export function claimRewards(e: ClaimedRewards): void {
   log.info("Claimed rewards handle with txHash: {}", [e.transaction.hash.toHexString()])
   const _totalRewards = e.params.lockupBaseReward.plus(e.params.lockupExtraReward).plus(e.params.unlockedReward)
   let _delegationId = concatID(e.params.toValidatorID.toHexString(), e.params.delegator.toHexString())
+  let _lockedupId = concatID(e.params.toValidatorID.toHexString(), e.params.delegator.toHexString())
+  let _validationId = concatID(e.params.delegator.toHexString(), e.params.toValidatorID.toHexString())
+  let _validatorId = e.params.toValidatorID.toHexString()
+  let _delegatorId = e.params.delegator.toHexString()
+  //Handle Stash reward
+  stashRewards(
+    e.params.delegator,
+    e.params.toValidatorID,
+    _lockedupId,
+    _validationId,
+    _validatorId,
+    _delegatorId
+  )
+  
   let staking = loadStaking()
   staking.totalClaimedRewards = staking.totalClaimedRewards.plus(_totalRewards)
   staking.save()

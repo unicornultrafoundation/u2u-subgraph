@@ -349,6 +349,52 @@
     "payable": false,
     "stateMutability": "view",
     "type": "function"
-  }
+  },
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "delegator",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "toValidatorID",
+				"type": "uint256"
+			}
+		],
+		"name": "isLockedUp",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+  {
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "delegator",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "toValidatorID",
+				"type": "uint256"
+			}
+		],
+		"name": "stashRewards",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
 
 ]

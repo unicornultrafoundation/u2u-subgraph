@@ -3,6 +3,7 @@ import { UnlockedStake } from "../../generated/SFC/SFC";
 import { ONE_BI, TransactionType, concatID } from "../helper";
 import { Delegator, LockedUp, TransactionCount, Validation } from "../../generated/schema";
 import { loadStaking, loadValidator, newTransaction, newTransactionCount } from "../initialize";
+import { stashRewards } from "./stashRewards";
 
 /**
  * Handle unlocked stake event
@@ -13,6 +14,18 @@ export function unlockStake(e: UnlockedStake): void {
   // Lockedup load
   let _validationId = concatID(e.params.delegator.toHexString(), e.params.validatorID.toHexString())
   let _lockedupId = concatID(e.params.validatorID.toHexString(), e.params.delegator.toHexString())
+  let _validatorId = e.params.validatorID.toHexString()
+  let _delegatorId = e.params.delegator.toHexString()
+  //Handle Stash reward
+  stashRewards(
+    e.params.delegator,
+    e.params.validatorID,
+    _lockedupId,
+    _validationId,
+    _validatorId,
+    _delegatorId
+  )
+
   let staking = loadStaking() // load staking
   staking.totalLockStake = staking.totalLockStake.minus(e.params.amount)
   staking.save()
@@ -54,7 +67,7 @@ function validationUpdate(e: UnlockedStake, _validationId: string): void {
 }
 
 
-function lockedupUpdate (e: UnlockedStake, _lockedupId: string): void {
+function lockedupUpdate(e: UnlockedStake, _lockedupId: string): void {
   // Lockedup load
   let lockedup = LockedUp.load(_lockedupId)
   if (lockedup == null) {

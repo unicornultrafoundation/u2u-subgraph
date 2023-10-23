@@ -3,6 +3,7 @@ import { Undelegated } from "../../generated/SFC/SFC"
 import { loadStaking, loadValidator, newTransaction, newTransactionCount, newWithdrawalRequest } from "../initialize"
 import { ONE_BI, TransactionType, concatID, isEqual } from "../helper"
 import { Delegation, Delegator, TransactionCount, Validation, WithdrawalRequest } from "../../generated/schema"
+import { stashRewards } from "./stashRewards"
 
 export function undelegate(e: Undelegated): void {
   log.info("Undelegated handle with txHash: {}", [e.transaction.hash.toHexString()])
@@ -11,6 +12,19 @@ export function undelegate(e: Undelegated): void {
   // Handle withdrawal request
   let _wrId = concatID(concatID(e.params.delegator.toHexString(), e.params.toValidatorID.toHexString()), e.params.wrID.toHexString())
   let _delegationId = concatID(e.params.toValidatorID.toHexString(), e.params.delegator.toHexString())
+  let _lockedupId = concatID(e.params.toValidatorID.toHexString(), e.params.delegator.toHexString())
+  let _validatorId = e.params.toValidatorID.toHexString()
+  let _delegatorId = e.params.delegator.toHexString()
+
+  //Handle Stash reward
+  stashRewards(
+    e.params.delegator,
+    e.params.toValidatorID,
+    _lockedupId,
+    _validationId,
+    _validatorId,
+    _delegatorId
+  )
 
   transactionUpdate(e)
   validationUpdate(e, _validationId)
