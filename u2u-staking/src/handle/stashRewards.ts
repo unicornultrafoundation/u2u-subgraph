@@ -24,7 +24,6 @@ export function stashRewards(
     if (lockedup !== null) {
       const locked = lockedup.lockedAmount
       lockedup.lockedAmount = ZERO_BI
-      lockedup.unlockedAmount = lockedup.unlockedAmount.plus(locked)
       lockedup.save()
       // Update validation
       validationUpdate(_validationId, locked)
@@ -52,7 +51,6 @@ function validationUpdate(_validationId: string, _locked: BigInt): void {
     validation.totalLockStake = validation.totalLockStake.minus(_locked)
     validation.save()
   }
-
 }
 
 function validatorUpdate(_validatorId: string, _locked: BigInt): void {

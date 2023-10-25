@@ -62,15 +62,15 @@ export function handleStashRewards(call: StashRewardsCall): void {
   let _validationId = concatID(call.inputs.delegator.toHexString(), call.inputs.toValidatorID.toHexString())
   let _validatorId = call.inputs.toValidatorID.toHexString()
   let _delegatorId = call.inputs.delegator.toHexString()
-    //Handle Stash reward
-    stashRewards(
-      call.inputs.delegator,
-      call.inputs.toValidatorID,
-      _lockedupId,
-      _validationId,
-      _validatorId,
-      _delegatorId
-    )
+  //Handle Stash reward
+  stashRewards(
+    call.inputs.delegator,
+    call.inputs.toValidatorID,
+    _lockedupId,
+    _validationId,
+    _validatorId,
+    _delegatorId
+  )
 }
 
 export function handleBurntFTM(event: BurntFTM): void { }
