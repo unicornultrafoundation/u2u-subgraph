@@ -30,7 +30,11 @@ export function stashRewards(
       validatorUpdate(_validatorId, locked)
       delegatorUpdate(_delegatorId, locked)
       let staking = loadStaking() // load staking
-      staking.totalLockStake = staking.totalLockStake.minus(locked)
+      if (staking.totalLockStake.gt(locked)) {
+        staking.totalLockStake = staking.totalLockStake.minus(locked)
+      } else {
+        staking.totalLockStake = ZERO_BI
+      }
       staking.save()
     }
   }
@@ -39,7 +43,11 @@ export function stashRewards(
 function delegatorUpdate(_delegatorId: string, _locked: BigInt): void {
   let delegator = Delegator.load(_delegatorId)
   if (delegator !== null) {
-    delegator.totalLockStake = delegator.totalLockStake.minus(_locked)
+    if (delegator.totalLockStake.gt(_locked)) {
+      delegator.totalLockStake = delegator.totalLockStake.minus(_locked)
+    } else {
+      delegator.totalLockStake = ZERO_BI
+    }
     delegator.save()
   }
 
@@ -48,7 +56,11 @@ function delegatorUpdate(_delegatorId: string, _locked: BigInt): void {
 function validationUpdate(_validationId: string, _locked: BigInt): void {
   let validation = Validation.load(_validationId)
   if (validation !== null) {
-    validation.totalLockStake = validation.totalLockStake.minus(_locked)
+    if (validation.totalLockStake.gt(_locked)) {
+      validation.totalLockStake = validation.totalLockStake.minus(_locked)
+    } else {
+      validation.totalLockStake = ZERO_BI
+    }
     validation.save()
   }
 }
@@ -56,8 +68,11 @@ function validationUpdate(_validationId: string, _locked: BigInt): void {
 function validatorUpdate(_validatorId: string, _locked: BigInt): void {
   let validator = Validator.load(_validatorId)
   if (validator !== null) {
-    validator.totalLockStake = validator.totalLockStake.minus(_locked)
+    if (validator.totalLockStake.gt(_locked)) {
+      validator.totalLockStake = validator.totalLockStake.minus(_locked)
+    } {
+      validator.totalLockStake = ZERO_BI
+    }
     validator.save()
   }
-
 }

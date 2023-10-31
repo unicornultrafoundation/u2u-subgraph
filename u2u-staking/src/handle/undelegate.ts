@@ -1,7 +1,7 @@
 import { log, BigInt } from "@graphprotocol/graph-ts"
 import { Undelegated } from "../../generated/SFC/SFC"
 import { loadStaking, loadValidator, newTransaction, newTransactionCount, newWithdrawalRequest } from "../initialize"
-import { ONE_BI, TransactionType, concatID, isEqual } from "../helper"
+import { ONE_BI, TransactionType, ZERO_BI, concatID, isEqual } from "../helper"
 import { Delegation, Delegator, TransactionCount, Validation, WithdrawalRequest } from "../../generated/schema"
 import { stashRewards } from "./stashRewards"
 
@@ -55,7 +55,11 @@ function delegatorUpdate(e: Undelegated): void {
     log.error("undelegated: load delegator failed with ID: {}, txHash: {}", [e.params.delegator.toHexString(), e.transaction.hash.toHexString()])
     return
   }
-  delegator.stakedAmount = delegator.stakedAmount.minus(e.params.amount)
+  if (delegator.stakedAmount.gt(e.params.amount)) {
+    delegator.stakedAmount = delegator.stakedAmount.minus(e.params.amount)
+  } else {
+    delegator.stakedAmount = ZERO_BI
+  }
   delegator.save()
 }
 
@@ -67,11 +71,28 @@ function validatorUpdate(e: Undelegated): void {
     return
   }
   if (isEqual(validator.auth.toHexString(), e.params.delegator.toHexString())) {
-    validator.selfStaked = validator.selfStaked.minus(e.params.amount)
-    staking.totalSelfStaked = staking.totalSelfStaked.minus(e.params.amount)
+    if (validator.selfStaked.gt(e.params.amount)) {
+      validator.selfStaked = validator.selfStaked.minus(e.params.amount)
+    } else {
+      validator.selfStaked = ZERO_BI
+    }
+    if (staking.totalSelfStaked.gt(e.params.amount)) {
+      staking.totalSelfStaked = staking.totalSelfStaked.minus(e.params.amount)
+    } else {
+      staking.totalSelfStaked = ZERO_BI
+    }
   } else {
-    validator.delegatedAmount = validator.delegatedAmount.minus(e.params.amount)
-    staking.totalDelegated = staking.totalDelegated.minus(e.params.amount)
+    if (validator.delegatedAmount.gt(e.params.amount)) {
+      validator.delegatedAmount = validator.delegatedAmount.minus(e.params.amount)
+    } else {
+      validator.delegatedAmount = ZERO_BI
+    }
+
+    if (staking.totalDelegated.gt(e.params.amount)) {
+      staking.totalDelegated = staking.totalDelegated.minus(e.params.amount)
+    } else {
+      staking.totalDelegated = ZERO_BI
+    }
   }
   let _newTotalValStaked = validator.totalStakedAmount.minus(e.params.amount)
   let _newTotalStaked = staking.totalStaked.minus(e.params.amount)
@@ -88,7 +109,11 @@ function delegationUpdate(e: Undelegated, _delegationId: string, _wrId: string):
     log.error("undelegated: load delegation failed with ID: {}, txHash: {}", [_delegationId, e.transaction.hash.toHexString()])
     return
   }
-  delegation.stakedAmount = delegation.stakedAmount.minus(e.params.amount)
+  if (delegation.stakedAmount.gt(e.params.amount)) {
+    delegation.stakedAmount = delegation.stakedAmount.minus(e.params.amount)
+  } else {
+    delegation.stakedAmount = ZERO_BI
+  }
   delegation.wr = _wrId
   delegation.save()
 }
@@ -100,11 +125,11 @@ function validationUpdate(e: Undelegated, _validationId: string): void {
     log.error("undelegated: load validation failed with ID: {}, txHash: {}", [_validationId, e.transaction.hash.toHexString()])
     return
   }
-  if (validation.stakedAmount < e.params.amount) {
-    log.error("undelegated: unstaked amount too large, txHash: {}", [e.transaction.hash.toHexString()])
-    return
+  if (validation.stakedAmount.gt(e.params.amount)) {
+    validation.stakedAmount = validation.stakedAmount.minus(e.params.amount)
+  } else {
+    validation.stakedAmount = ZERO_BI
   }
-  validation.stakedAmount = validation.stakedAmount.minus(e.params.amount)
   validation.save()
 }
 
