@@ -122,7 +122,11 @@ function lockedupUpdate(e: UnlockedStake, _lockedupId: string): void {
     log.error("unlockedStake: load lockedId failed with ID: {}, txHash: {}", [_lockedupId, e.transaction.hash.toHexString()])
     return;
   }
-  lockedup.lockedAmount = lockedup.lockedAmount.minus(e.params.amount)
+  if (lockedup.lockedAmount.gt(e.params.amount)) {
+    lockedup.lockedAmount = lockedup.lockedAmount.minus(e.params.amount)
+  } else {
+    lockedup.lockedAmount = ZERO_BI
+  }
   lockedup.penalty = lockedup.penalty.plus(e.params.penalty)
   lockedup.save()
 }
