@@ -26,7 +26,8 @@ export function restakRewards(e: RestakedRewards): void {
     _lockedupId,
     _validationId,
     _validatorId,
-    _delegatorId
+    _delegatorId,
+    e.block.timestamp
   )
 
   transactionUpdate(e, _totalRewards, _lockupReward)

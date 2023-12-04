@@ -1,6 +1,5 @@
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
-import { SFC } from "../../generated/SFC/SFC";
-import { STAKING_ADDRESS, ZERO_BI } from "../helper";
+import { ZERO_BI } from "../helper";
 import { Delegator, LockedUp, Validation, Validator } from "../../generated/schema";
 import { loadStaking } from "../initialize";
 
@@ -10,33 +9,29 @@ export function stashRewards(
   _lockedupId: string,
   _validationId: string,
   _validatorId: string,
-  _delegatorId: string
+  _delegatorId: string,
+  _timestamp: BigInt
 ): void {
-  let stakingSMC = SFC.bind(STAKING_ADDRESS)
-  let isLockedUpResult = stakingSMC.try_isLockedUp(delegatorAddr, toValidatorID)
-  if (isLockedUpResult.reverted) {
-    log.error("get isLockedUpResult reverted", [])
-    return;
-  }
-  let isLockedUpValue = isLockedUpResult.value
-  if (!isLockedUpValue) {
-    let lockedup = LockedUp.load(_lockedupId)
-    if (lockedup !== null) {
-      const locked = lockedup.lockedAmount
-      lockedup.lockedAmount = ZERO_BI
-      lockedup.save()
-      // Update validation
-      validationUpdate(_validationId, locked)
-      validatorUpdate(_validatorId, locked)
-      delegatorUpdate(_delegatorId, locked)
-      let staking = loadStaking() // load staking
-      if (staking.totalLockStake.gt(locked)) {
-        staking.totalLockStake = staking.totalLockStake.minus(locked)
-      } else {
-        staking.totalLockStake = ZERO_BI
-      }
-      staking.save()
+  let lockedup = LockedUp.load(_lockedupId)
+  if (lockedup !== null) {
+    const _endTime = lockedup.endTime;
+    const _locked = lockedup.lockedAmount
+    const _now =  _timestamp
+    log.info("Stash rewards handle with delegator {}, locked: {}, endTime: {}, _now: {}", [delegatorAddr.toHexString(), _locked.toString(), _endTime.toString(), _now.toString()])
+    if (_endTime.gt(ZERO_BI) && _locked.gt(ZERO_BI) && _endTime.ge(_now)) return
+    lockedup.lockedAmount = ZERO_BI
+    lockedup.save()
+    // Update validation
+    validationUpdate(_validationId, _locked)
+    validatorUpdate(_validatorId, _locked)
+    delegatorUpdate(_delegatorId, _locked)
+    let staking = loadStaking() // load staking
+    if (staking.totalLockStake.gt(_locked)) {
+      staking.totalLockStake = staking.totalLockStake.minus(_locked)
+    } else {
+      staking.totalLockStake = ZERO_BI
     }
+    staking.save()
   }
 }
 

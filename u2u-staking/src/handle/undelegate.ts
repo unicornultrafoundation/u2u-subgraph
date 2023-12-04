@@ -23,7 +23,8 @@ export function undelegate(e: Undelegated): void {
     _lockedupId,
     _validationId,
     _validatorId,
-    _delegatorId
+    _delegatorId,
+    e.block.timestamp
   )
 
   transactionUpdate(e)

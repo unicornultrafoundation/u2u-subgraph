@@ -25,7 +25,8 @@ export function unlockStake(e: UnlockedStake): void {
     _lockedupId,
     _validationId,
     _validatorId,
-    _delegatorId
+    _delegatorId,
+    e.block.timestamp
   )
 
   let staking = loadStaking() // load staking

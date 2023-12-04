@@ -69,7 +69,8 @@ export function handleStashRewards(call: StashRewardsCall): void {
     _lockedupId,
     _validationId,
     _validatorId,
-    _delegatorId
+    _delegatorId,
+    call.block.timestamp
   )
 }
 

@@ -10,7 +10,7 @@ import { stashRewards } from "./stashRewards"
  * @param event 
  */
 export function claimRewards(e: ClaimedRewards): void {
-  log.info("Claimed rewards handle with txHash: {}", [e.transaction.hash.toHexString()])
+  log.info("Claimed rewards handle with txHash: {}, block: {}", [e.transaction.hash.toHexString(), e.block.number.toString()])
   const _totalRewards = e.params.lockupBaseReward.plus(e.params.lockupExtraReward).plus(e.params.unlockedReward)
   let _delegationId = concatID(e.params.toValidatorID.toHexString(), e.params.delegator.toHexString())
   let _lockedupId = concatID(e.params.toValidatorID.toHexString(), e.params.delegator.toHexString())
@@ -24,7 +24,8 @@ export function claimRewards(e: ClaimedRewards): void {
     _lockedupId,
     _validationId,
     _validatorId,
-    _delegatorId
+    _delegatorId,
+    e.block.timestamp
   )
   
   let staking = loadStaking()

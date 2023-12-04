@@ -19,7 +19,8 @@ export function delegate(e: Delegated): void {
     _lockedupId,
     _validationId,
     _validatorId,
-    _delegatorId
+    _delegatorId,
+    e.block.timestamp
   )
 
   validationUpdate(e, _validationId)
