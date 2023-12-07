@@ -3,6 +3,7 @@ import { LockedUpStake } from "../../generated/SFC/SFC"
 import { ONE_BI, TransactionType, concatID } from "../helper"
 import { Delegation, Delegator, LockedUp, TransactionCount, Validation } from "../../generated/schema"
 import { loadStaking, loadValidator, newLockedUp, newTransaction, newTransactionCount } from "../initialize"
+import { stashRewards } from "./stashRewards"
 
 /**
  * Handle lockedup stake
@@ -13,6 +14,19 @@ export function lockUpStake(e: LockedUpStake): void {
   let _validationId = concatID(e.params.delegator.toHexString(), e.params.validatorID.toHexString())
   let _lockedupId = concatID(e.params.validatorID.toHexString(), e.params.delegator.toHexString())
   let _delegationId = concatID(e.params.validatorID.toHexString(), e.params.delegator.toHexString())
+  let _validatorId = e.params.validatorID.toHexString()
+  let _delegatorId = e.params.delegator.toHexString()
+  //Handle Stash reward
+  stashRewards(
+    e.params.delegator,
+    e.params.validatorID,
+    _lockedupId,
+    _validationId,
+    _validatorId,
+    _delegatorId,
+    e.block.timestamp
+  )
+
   let staking = loadStaking() // load staking
   staking.totalLockStake = staking.totalLockStake.plus(e.params.amount)
   staking.save()
@@ -65,19 +79,19 @@ function validationUpdate(e: LockedUpStake, _validationId: string): void {
 }
 
 
-function lockedupUpdate (e: LockedUpStake, _lockedupId: string): void {
-   // Lockedup load
-   let lockedup = LockedUp.load(_lockedupId)
-   if (lockedup == null) {
-     lockedup = newLockedUp(_lockedupId)
-     lockedup.delegator = e.params.delegator.toHexString()
-     lockedup.validator = e.params.validatorID.toHexString()
-   }
-   lockedup.duration = e.params.duration
-   lockedup.lockedAmount = lockedup.lockedAmount.plus(e.params.amount)
-   lockedup.endTime = e.params.duration.plus(e.block.timestamp)
+function lockedupUpdate(e: LockedUpStake, _lockedupId: string): void {
+  // Lockedup load
+  let lockedup = LockedUp.load(_lockedupId)
+  if (lockedup == null) {
+    lockedup = newLockedUp(_lockedupId)
+    lockedup.delegator = e.params.delegator.toHexString()
+    lockedup.validator = e.params.validatorID.toHexString()
+  }
+  lockedup.duration = e.params.duration
+  lockedup.lockedAmount = lockedup.lockedAmount.plus(e.params.amount)
+  lockedup.endTime = e.params.duration.plus(e.block.timestamp)
 
-   lockedup.save()
+  lockedup.save()
 }
 
 function transactionUpdate(e: LockedUpStake): void {

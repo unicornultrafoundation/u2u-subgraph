@@ -3,6 +3,7 @@ import { RestakedRewards } from "../../generated/SFC/SFC"
 import { ONE_BI, TransactionType, concatID } from "../helper"
 import { loadStaking, loadValidator, newLockedUp, newTransaction, newTransactionCount } from "../initialize"
 import { Delegation, Delegator, LockedUp, TransactionCount, Validation } from "../../generated/schema"
+import { stashRewards } from "./stashRewards"
 
 /**
  * Handle restake rewards
@@ -15,6 +16,20 @@ export function restakRewards(e: RestakedRewards): void {
   const _lockupReward = e.params.lockupBaseReward.plus(e.params.lockupExtraReward)
   let _delegationId = concatID(e.params.toValidatorID.toHexString(), e.params.delegator.toHexString())
   let _validationId = concatID(e.params.delegator.toHexString(), e.params.toValidatorID.toHexString())
+  let _validatorId = e.params.toValidatorID.toHexString()
+  let _delegatorId = e.params.delegator.toHexString()
+  
+  //Handle Stash reward
+  stashRewards(
+    e.params.delegator,
+    e.params.toValidatorID,
+    _lockedupId,
+    _validationId,
+    _validatorId,
+    _delegatorId,
+    e.block.timestamp
+  )
+
   transactionUpdate(e, _totalRewards, _lockupReward)
   delegationUpdate(e, _delegationId, _totalRewards, _lockedupId)
   validatorUpdate(e, _totalRewards, _lockupReward)
@@ -23,7 +38,7 @@ export function restakRewards(e: RestakedRewards): void {
   validationUpdate(e, _validationId, _lockupReward)
 }
 
-function lockedupUpdate (e: RestakedRewards, _lockedupId: string, _lockupReward: BigInt): void {
+function lockedupUpdate(e: RestakedRewards, _lockedupId: string, _lockupReward: BigInt): void {
   // Lockedup load
   let lockedup = LockedUp.load(_lockedupId)
   if (lockedup == null) {
@@ -52,7 +67,7 @@ function delegatorUpdate(e: RestakedRewards, totalRewards: BigInt, _lockupReward
     log.error("Restake rewards: load delegator failed with ID: {}, txHash: {}", [e.params.toValidatorID.toHexString(), e.transaction.hash.toHexString()])
     return
   }
-  delegator.totalClaimedRewards =  delegator.totalClaimedRewards.plus(totalRewards)
+  delegator.totalClaimedRewards = delegator.totalClaimedRewards.plus(totalRewards)
   delegator.totalLockStake = delegator.totalLockStake.plus(_lockupReward)
   delegator.save()
 }

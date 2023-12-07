@@ -3,11 +3,26 @@ import { Delegated } from "../../generated/SFC/SFC"
 import { loadStaking, loadValidator, newDelegation, newDelegator, newTransaction, newTransactionCount, newValidation } from "../initialize"
 import { ONE_BI, TransactionType, arrayContained, concatID, isEqual } from "../helper"
 import { Delegation, Delegator, TransactionCount, Validation } from "../../generated/schema"
+import { stashRewards } from "./stashRewards"
 
 export function delegate(e: Delegated): void {
   log.info("Delegated handle with txHash: {}", [e.transaction.hash.toHexString()])
   let _validationId = concatID(e.params.delegator.toHexString(), e.params.toValidatorID.toHexString())
   let _delegationId = concatID(e.params.toValidatorID.toHexString(), e.params.delegator.toHexString())
+  let _lockedupId = concatID(e.params.toValidatorID.toHexString(), e.params.delegator.toHexString())
+  let _validatorId = e.params.toValidatorID.toHexString()
+  let _delegatorId = e.params.delegator.toHexString()
+  //Handle Stash reward
+  stashRewards(
+    e.params.delegator,
+    e.params.toValidatorID,
+    _lockedupId,
+    _validationId,
+    _validatorId,
+    _delegatorId,
+    e.block.timestamp
+  )
+
   validationUpdate(e, _validationId)
   delegationUpdate(e, _delegationId)
   delegatorUpdate(e, _validationId)
