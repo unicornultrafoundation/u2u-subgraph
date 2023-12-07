@@ -20,7 +20,7 @@ dataSources:
           file: ./abis/SFC.json
       blockHandlers:
         - handler: handleBlock
-        - handler: handleBlockWithCallToContract
+        - handler: handleBlockWithCall
           filter:
             kind: call
       file: ./src/network.ts

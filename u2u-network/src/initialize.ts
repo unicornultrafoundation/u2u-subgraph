@@ -1,4 +1,4 @@
-import { Epoch, EpochCounter, Validator, ValidatorCounter } from "../generated/schema"
+import { Epoch, EpochCounter, Pointer, Validator, ValidatorCounter } from "../generated/schema"
 import { EMPTY_STRING, ONE_BI, ZERO_BI } from "./helper"
 
 /**
@@ -18,6 +18,7 @@ export function newEpoch(_epochId: string): Epoch {
   epoch.epochFee = ZERO_BI
   epoch.epochRewards = ZERO_BI
   epoch.totalRewards = ZERO_BI
+  epoch.totalEpochFee = ZERO_BI
   epoch.validators = []
   return epoch
 }
@@ -50,4 +51,15 @@ export function loadValidatorCounter(_id: string): ValidatorCounter {
     counter.total = ZERO_BI
   }
   return counter
+}
+
+
+export function loadPointer(): Pointer {
+  let _id = ONE_BI.toHexString()
+  let _pointer = Pointer.load(_id)
+  if (_pointer == null) {
+    _pointer = new Pointer(_id)
+    _pointer.pointer = ZERO_BI
+  }
+  return _pointer
 }

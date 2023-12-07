@@ -2,15 +2,22 @@ import { ethereum, log, BigInt } from "@graphprotocol/graph-ts"
 import {
   SFC
 } from "../generated/SFC/SFC"
-import { DECIMAL_BI, ONE_BI, STAKING_ADDRESS, ZERO_BI, concatID } from "./helper"
-import { loadEpochCounter, loadValidatorCounter, newEpoch, newValidator } from "./initialize"
+import { DECIMAL_BI, ONE_BI, STAKING_ADDRESS, ZERO_BI, blockSkip, concatID } from "./helper"
+import { loadEpochCounter, loadPointer, loadValidatorCounter, newEpoch, newValidator } from "./initialize"
 import { Epoch, Validator } from "../generated/schema"
 
-
-export function handleBlockWithCallToContract(block: ethereum.Block): void { }
+export function handleBlockWithCall(block: ethereum.Block): void { }
 
 export function handleBlock(block: ethereum.Block): void {
-  log.info("Block handle with number: {}", [block.number.toHexString()])
+  const _pointer = loadPointer()
+  const nextPointer = _pointer.pointer.plus(blockSkip)
+  if (nextPointer.gt(block.number)) {
+    return
+  }
+  log.info("Next indexed pointer: {}", [nextPointer.toString()])
+  _pointer.pointer = nextPointer;
+  _pointer.save()
+  log.info("Block handle with number: {}", [block.number.toString()])
   let stakingSMC = SFC.bind(STAKING_ADDRESS)
   let currenEpochResult = stakingSMC.try_currentEpoch()
   if (currenEpochResult.reverted) {
@@ -22,11 +29,12 @@ export function handleBlock(block: ethereum.Block): void {
     log.error("Epoch zero", [])
     return;
   }
-  
   let _lastEpoch = currentEpochID.minus(ONE_BI)
   log.info("Epoch handle with currentEpoch: {}, lastEpoch: {}", [currentEpochID.toString(), _lastEpoch.toString()])
-  updateEpoch(_lastEpoch, block, stakingSMC)
-  updateValidators(_lastEpoch)
+  if (_lastEpoch.gt(ONE_BI)) {
+    updateEpoch(_lastEpoch, block, stakingSMC)
+    updateValidators(_lastEpoch)
+  }
 }
 
 function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC): void {
@@ -62,9 +70,10 @@ function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC)
       if (epochSnapshot.getEndTime().gt(_privEpoch.endTime)) {
         _epochTimeSeconds = epochSnapshot.getEndTime().minus(_privEpoch.endTime)
       }
-      _epochRewards = _epochTimeSeconds.times(epochSnapshot.getBaseRewardPerSecond()).plus(epochSnapshot.getEpochFee())
+      _epochRewards = _epochTimeSeconds.times(epochSnapshot.getBaseRewardPerSecond()).plus(epochSnapshot.getEpochFee().times(BigInt.fromI32(75)).div(BigInt.fromI32(100)))
       epochEntity.epochRewards = _epochRewards
       epochEntity.totalRewards = _privEpoch.totalRewards.plus(_epochRewards)
+      epochEntity.totalEpochFee = _privEpoch.totalEpochFee.plus(epochSnapshot.getEpochFee())
     }
   }
   epochEntity.save()
@@ -85,6 +94,7 @@ function updateValidators(epochId: BigInt): void {
 function _updateValidator(epochId: BigInt, validatorId: BigInt): void {
   let stakingSMC = SFC.bind(STAKING_ADDRESS)
   let _receivedStake = stakingSMC.try_getEpochReceivedStake(epochId, validatorId)
+  let _preAccumulatedRewardPerToken = stakingSMC.try_getEpochAccumulatedRewardPerToken(epochId.minus(ONE_BI), validatorId)
   let _accumulatedRewardPerToken = stakingSMC.try_getEpochAccumulatedRewardPerToken(epochId, validatorId)
   let _entityId = concatID(epochId.toHexString(), validatorId.toHexString())
   let valEntity = Validator.load(_entityId)
@@ -99,7 +109,8 @@ function _updateValidator(epochId: BigInt, validatorId: BigInt): void {
   }
   valEntity.receivedStake = _receivedStake.value
   valEntity.accumulatedRewardPerToken = _accumulatedRewardPerToken.value
-  let _totalEpochRewards = _receivedStake.value.times(_accumulatedRewardPerToken.value).div(DECIMAL_BI)
+  const _rewardPerToken = _accumulatedRewardPerToken.value.minus(_preAccumulatedRewardPerToken.value)
+  let _totalEpochRewards = _receivedStake.value.times(_rewardPerToken).div(DECIMAL_BI)
   if (epochId.gt(ONE_BI)) {
     let _prevId = concatID((epochId.minus(ONE_BI)).toHexString(), validatorId.toHexString())
     let _prevEpoch = Validator.load(_prevId)
