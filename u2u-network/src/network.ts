@@ -15,7 +15,7 @@ export function handleBlock(block: ethereum.Block): void {
     return
   }
   log.info("Next indexed pointer: {}", [nextPointer.toString()])
-  _pointer.pointer = nextPointer;
+  _pointer.pointer = block.number;
   _pointer.save()
   log.info("Block handle with number: {}", [block.number.toString()])
   let stakingSMC = SFC.bind(STAKING_ADDRESS)
@@ -110,18 +110,17 @@ function _updateValidator(epochId: BigInt, validatorId: BigInt): void {
   valEntity.receivedStake = _receivedStake.value
   valEntity.accumulatedRewardPerToken = _accumulatedRewardPerToken.value
   const _rewardPerToken = _accumulatedRewardPerToken.value.minus(_preAccumulatedRewardPerToken.value)
-  let _totalEpochRewards = _receivedStake.value.times(_rewardPerToken).div(DECIMAL_BI)
+  let _epochRewards = _receivedStake.value.times(_rewardPerToken).div(DECIMAL_BI)
   if (epochId.gt(ONE_BI)) {
     let _prevId = concatID((epochId.minus(ONE_BI)).toHexString(), validatorId.toHexString())
     let _prevEpoch = Validator.load(_prevId)
     if (_prevEpoch != null) {
-      let _prevTotalEpochRewards = _prevEpoch.totalRewards
-      valEntity.epochRewards = _totalEpochRewards.minus(_prevTotalEpochRewards)
+      valEntity.totalRewards =  _prevEpoch.totalRewards.plus(_epochRewards)
     }
   } else {
-    valEntity.epochRewards = _totalEpochRewards;
+    valEntity.totalRewards = _epochRewards;
   }
-  valEntity.totalRewards = _totalEpochRewards;
+  valEntity.epochRewards = _epochRewards
   let epochEntity = Epoch.load(epochId.toHexString())
   if (epochEntity != null) {
     let _validators = epochEntity.validators
