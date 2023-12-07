@@ -8,7 +8,7 @@ dataSources:
     source:
       address: "0xfc00face00000000000000000000000000000000"
       abi: SFC
-      startBlock: 3109855
+      startBlock: 1
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
