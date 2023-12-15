@@ -75,6 +75,7 @@ function validationUpdate(e: LockedUpStake, _validationId: string): void {
     return
   }
   validation.totalLockStake = validation.totalLockStake.plus(e.params.amount)
+  validation.lockedEndtime = e.params.duration.plus(e.block.timestamp)
   validation.save()
 }
 
@@ -90,7 +91,6 @@ function lockedupUpdate(e: LockedUpStake, _lockedupId: string): void {
   lockedup.duration = e.params.duration
   lockedup.lockedAmount = lockedup.lockedAmount.plus(e.params.amount)
   lockedup.endTime = e.params.duration.plus(e.block.timestamp)
-
   lockedup.save()
 }
 

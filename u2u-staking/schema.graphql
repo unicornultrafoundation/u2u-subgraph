@@ -55,6 +55,7 @@ type Validation @entity {
   validator: Validator! #validator
   stakedAmount: BigInt!
   totalLockStake: BigInt!
+  lockedEndtime: BigInt!
 }
 
 type WithdrawalRequest @entity {
