@@ -4,11 +4,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: SFC
-    network: testnet
+    network: mainnet
     source:
       address: "0xfc00face00000000000000000000000000000000"
       abi: SFC
-      startBlock: 1
+      startBlock: 15400000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

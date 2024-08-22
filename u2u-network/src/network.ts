@@ -93,9 +93,9 @@ function updateValidators(epochId: BigInt): void {
 
 function _updateValidator(epochId: BigInt, validatorId: BigInt): void {
   let stakingSMC = SFC.bind(STAKING_ADDRESS)
-  let _receivedStake = stakingSMC.try_getEpochReceivedStake(epochId, validatorId)
-  let _preAccumulatedRewardPerToken = stakingSMC.try_getEpochAccumulatedRewardPerToken(epochId.minus(ONE_BI), validatorId)
-  let _accumulatedRewardPerToken = stakingSMC.try_getEpochAccumulatedRewardPerToken(epochId, validatorId)
+  let _receivedStake = stakingSMC.getEpochReceivedStake(epochId, validatorId)
+  let _preAccumulatedRewardPerToken = stakingSMC.getEpochAccumulatedRewardPerToken(epochId.minus(ONE_BI), validatorId)
+  let _accumulatedRewardPerToken = stakingSMC.getEpochAccumulatedRewardPerToken(epochId, validatorId)
   let _entityId = concatID(epochId.toHexString(), validatorId.toHexString())
   let valEntity = Validator.load(_entityId)
   if (valEntity == null) {
@@ -107,10 +107,10 @@ function _updateValidator(epochId: BigInt, validatorId: BigInt): void {
     validatorCounter.total = validatorCounter.total.plus(ONE_BI)
     validatorCounter.save()
   }
-  valEntity.receivedStake = _receivedStake.value
-  valEntity.accumulatedRewardPerToken = _accumulatedRewardPerToken.value
-  const _rewardPerToken = _accumulatedRewardPerToken.value.minus(_preAccumulatedRewardPerToken.value)
-  let _epochRewards = _receivedStake.value.times(_rewardPerToken).div(DECIMAL_BI)
+  valEntity.receivedStake = _receivedStake
+  valEntity.accumulatedRewardPerToken = _accumulatedRewardPerToken
+  const _rewardPerToken = _accumulatedRewardPerToken.minus(_preAccumulatedRewardPerToken)
+  let _epochRewards = _receivedStake.times(_rewardPerToken).div(DECIMAL_BI)
   if (epochId.gt(ONE_BI)) {
     let _prevId = concatID((epochId.minus(ONE_BI)).toHexString(), validatorId.toHexString())
     let _prevEpoch = Validator.load(_prevId)
@@ -133,11 +133,7 @@ function _updateValidator(epochId: BigInt, validatorId: BigInt): void {
 
 function getEpochValidators(epochId: BigInt): BigInt[] {
   let stakingSMC = SFC.bind(STAKING_ADDRESS)
-  let validators = stakingSMC.try_getEpochValidatorIDs(epochId)
-  if (validators.reverted) {
-    log.error("get try_getEpochValidatorIDs reverted", [])
-    return [];
-  }
-  return validators.value
+  let validators = stakingSMC.getEpochValidatorIDs(epochId)
+  return validators
 }
 
