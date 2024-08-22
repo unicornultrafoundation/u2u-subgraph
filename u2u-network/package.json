@@ -10,7 +10,10 @@
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 u2u/sfc-network",
     "create-local-test": "graph create --node http://localhost:8020/ u2u/sfc-network-test",
     "remove-local-test": "graph remove --node http://localhost:8020/ u2u/sfc-network-test",
-    "deploy-local-test": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 u2u/sfc-network-test",
+    "deploy-local-test": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 u2u/sfc-network-test -l v0.0.1",
+    "create-local-v3": "graph create --node http://localhost:8020/ u2u/sfc-network-v3",
+    "remove-local-v3": "graph remove --node http://localhost:8020/ u2u/sfc-network-v3",
+    "deploy-local-v3": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 u2u/sfc-network-v3 -l v0.0.1",
     "test": "graph test"
   },
   "dependencies": {
