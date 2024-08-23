@@ -39,7 +39,7 @@ export function loadEpochCounter(): EpochCounter {
   let counter = EpochCounter.load(_id)
   if (counter == null) {
     counter = new EpochCounter(_id)
-    counter.total = ZERO_BI
+    counter.total = ONE_BI
   }
   return counter
 }

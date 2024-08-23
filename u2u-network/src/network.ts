@@ -15,8 +15,6 @@ export function handleBlock(block: ethereum.Block): void {
     return
   }
   log.info("Next indexed pointer: {}", [nextPointer.toString()])
-  _pointer.pointer = block.number;
-  _pointer.save()
   log.info("Block handle with number: {}", [block.number.toString()])
   let stakingSMC = SFC.bind(STAKING_ADDRESS)
   let currenEpochResult = stakingSMC.currentEpoch()
@@ -26,10 +24,24 @@ export function handleBlock(block: ethereum.Block): void {
     return;
   }
   let _lastEpoch = currentEpochID.minus(ONE_BI)
+
+  let epochCounter = loadEpochCounter()
+  let lastestWroteEpoch = epochCounter.total
+
+  if (_lastEpoch.gt(lastestWroteEpoch)) {
+    _lastEpoch = lastestWroteEpoch
+  } else {
+    _pointer.pointer = block.number;
+    _pointer.save()
+  }
+
   log.info("Epoch handle with currentEpoch: {}, lastEpoch: {}", [currentEpochID.toString(), _lastEpoch.toString()])
   if (_lastEpoch.gt(ONE_BI)) {
     updateEpoch(_lastEpoch, block, stakingSMC)
   }
+
+  epochCounter.total = lastestWroteEpoch.plus(ONE_BI)
+  epochCounter.save()
 }
 
 function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC): void {
@@ -39,9 +51,6 @@ function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC)
   }
   epochEntity = newEpoch(_lastEpoch.toHexString())
   // update epoch counter
-  let epochCounter = loadEpochCounter()
-  epochCounter.total = epochCounter.total.plus(ONE_BI)
-
   epochEntity.epoch = _lastEpoch
   epochEntity.block = block.number.minus(ONE_BI)
   let epochSnapshotResult = stakingSMC.getEpochSnapshot(_lastEpoch)
@@ -68,7 +77,6 @@ function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC)
     }
   }
   epochEntity.save()
-  epochCounter.save()
 
   updateValidators(_lastEpoch)
 }
