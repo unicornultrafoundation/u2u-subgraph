@@ -19,12 +19,8 @@ export function handleBlock(block: ethereum.Block): void {
   _pointer.save()
   log.info("Block handle with number: {}", [block.number.toString()])
   let stakingSMC = SFC.bind(STAKING_ADDRESS)
-  let currenEpochResult = stakingSMC.try_currentEpoch()
-  if (currenEpochResult.reverted) {
-    log.error("get currenEpochResult reverted", [])
-    return;
-  }
-  let currentEpochID = currenEpochResult.value
+  let currenEpochResult = stakingSMC.currentEpoch()
+  let currentEpochID = currenEpochResult
   if (currentEpochID.isZero()) {
     log.error("Epoch zero", [])
     return;
@@ -33,7 +29,6 @@ export function handleBlock(block: ethereum.Block): void {
   log.info("Epoch handle with currentEpoch: {}, lastEpoch: {}", [currentEpochID.toString(), _lastEpoch.toString()])
   if (_lastEpoch.gt(ONE_BI)) {
     updateEpoch(_lastEpoch, block, stakingSMC)
-    updateValidators(_lastEpoch)
   }
 }
 
@@ -49,12 +44,8 @@ function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC)
 
   epochEntity.epoch = _lastEpoch
   epochEntity.block = block.number.minus(ONE_BI)
-  let epochSnapshotResult = stakingSMC.try_getEpochSnapshot(_lastEpoch)
-  if (epochSnapshotResult.reverted) {
-    log.error("get epochSnapshotResult reverted", [])
-    return
-  }
-  let epochSnapshot = epochSnapshotResult.value
+  let epochSnapshotResult = stakingSMC.getEpochSnapshot(_lastEpoch)
+  let epochSnapshot = epochSnapshotResult
   epochEntity.endTime = epochSnapshot.getEndTime()
   epochEntity.totalBaseReward = epochSnapshot.getTotalBaseRewardWeight()
   epochEntity.totalTxReward = epochSnapshot.getTotalTxRewardWeight()
@@ -78,6 +69,8 @@ function updateEpoch(_lastEpoch: BigInt, block: ethereum.Block, stakingSMC: SFC)
   }
   epochEntity.save()
   epochCounter.save()
+
+  updateValidators(_lastEpoch)
 }
 
 function updateValidators(epochId: BigInt): void {
