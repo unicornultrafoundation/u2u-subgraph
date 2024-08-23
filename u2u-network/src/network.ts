@@ -29,7 +29,7 @@ export function handleBlock(block: ethereum.Block): void {
   let lastestWroteEpoch = epochCounter.total
 
   if (_lastEpoch.gt(lastestWroteEpoch)) {
-    _lastEpoch = lastestWroteEpoch
+    _lastEpoch = lastestWroteEpoch.plus(ONE_BI)
   } else {
     _pointer.pointer = block.number;
     _pointer.save()
@@ -40,7 +40,7 @@ export function handleBlock(block: ethereum.Block): void {
     updateEpoch(_lastEpoch, block, stakingSMC)
   }
 
-  epochCounter.total = lastestWroteEpoch.plus(ONE_BI)
+  epochCounter.total = _lastEpoch
   epochCounter.save()
 }
 
