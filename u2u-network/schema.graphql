@@ -11,6 +11,7 @@ type Epoch @entity {
   epochFee: BigInt!
   epochRewards: BigInt!
   totalRewards: BigInt!
+  totalEpochFee: BigInt!
   validators: [Validator!]!
 }
 
@@ -32,4 +33,10 @@ type EpochCounter @entity {
 type ValidatorCounter @entity {
   id: ID!
   total: BigInt!
+}
+
+
+type Pointer @entity {
+  id: ID!
+  pointer: BigInt!
 }

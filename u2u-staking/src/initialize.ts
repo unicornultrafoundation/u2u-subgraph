@@ -41,6 +41,7 @@ export function newValidation(_validationId: string): Validation {
   validation.validator = EMPTY_STRING
   validation.stakedAmount = ZERO_BI
   validation.totalLockStake = ZERO_BI
+  validation.lockedEndtime = ZERO_BI
   return validation
 }
 

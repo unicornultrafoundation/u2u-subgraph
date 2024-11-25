@@ -4,7 +4,7 @@ schema:
 dataSources:
   - kind: ethereum
     name: SFC
-    network: testnet
+    network: mainnet
     source:
       address: "0xfc00face00000000000000000000000000000000"
       abi: SFC
@@ -20,7 +20,7 @@ dataSources:
           file: ./abis/SFC.json
       blockHandlers:
         - handler: handleBlock
-        - handler: handleBlockWithCallToContract
+        - handler: handleBlockWithCall
           filter:
             kind: call
       file: ./src/network.ts

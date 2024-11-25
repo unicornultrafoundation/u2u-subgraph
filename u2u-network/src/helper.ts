@@ -17,3 +17,5 @@ export let EMPTY_STRING = "";
 export function concatID(str1: string, str2: string): string {
   return str1.concat("-").concat(str2);
 }
+
+export const blockSkip = BigInt.fromI32(200) // Block skip
