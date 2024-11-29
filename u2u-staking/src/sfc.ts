@@ -1,5 +1,4 @@
 import {
-  SFC,
   ClaimedRewards,
   CreatedValidator,
   Delegated,
@@ -10,9 +9,7 @@ import {
   UnlockedStake,
   UpdatedSlashingRefundRatio,
   Withdrawn,
-  StashRewardsCall,
-  BurntU2U,
-  InflatedU2U
+  StashRewardsCall
 } from "../generated/SFC/SFC"
 import { createdValidator } from "./handle/createValidator";
 import { delegate } from "./handle/delegate";
@@ -74,8 +71,8 @@ export function handleStashRewards(call: StashRewardsCall): void {
   )
 }
 
-export function handleBurntU2U(event: BurntU2U): void { }
-export function handleInflatedU2U(event: InflatedU2U): void { }
+// export function handleBurntU2U(event: BurntU2U): void { }
+// export function handleInflatedU2U(event: InflatedU2U): void { }
 export function handleRefundedSlashedLegacyDelegation(
   event: RefundedSlashedLegacyDelegation
 ): void { }
