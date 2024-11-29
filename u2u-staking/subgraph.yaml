@@ -4,7 +4,7 @@ schema:
 dataSources:
   - kind: ethereum
     name: SFC
-    network: testnet
+    network: mainnet
     source:
       address: "0xfc00face00000000000000000000000000000000"
       abi: SFC
@@ -14,11 +14,11 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - BurntFTM
+        - BurntU2U
         - ClaimedRewards
         - CreatedValidator
         - Delegated
-        - InflatedFTM
+        - InflatedU2U
         - LockedUpStake
         - RefundedSlashedLegacyDelegation
         - RestakedRewards
@@ -30,16 +30,16 @@ dataSources:
         - name: SFC
           file: ./abis/SFC.json
       eventHandlers:
-        - event: BurntFTM(uint256)
-          handler: handleBurntFTM
+        - event: BurntU2U(uint256)
+          handler: handleBurntU2U
         - event: ClaimedRewards(indexed address,indexed uint256,uint256,uint256,uint256)
           handler: handleClaimedRewards
         - event: CreatedValidator(indexed uint256,indexed address,uint256,uint256)
           handler: handleCreatedValidator
         - event: Delegated(indexed address,indexed uint256,uint256)
           handler: handleDelegated
-        - event: InflatedFTM(indexed address,uint256,string)
-          handler: handleInflatedFTM
+        - event: InflatedU2U(indexed address,uint256,string)
+          handler: handleInflatedU2U
         - event: LockedUpStake(indexed address,indexed uint256,uint256,uint256)
           handler: handleLockedUpStake
         - event: RefundedSlashedLegacyDelegation(indexed address,indexed uint256,uint256)
