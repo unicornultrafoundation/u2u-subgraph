@@ -1,10 +1,7 @@
 import {
-  SFC,
-  BurntFTM,
   ClaimedRewards,
   CreatedValidator,
   Delegated,
-  InflatedFTM,
   LockedUpStake,
   RefundedSlashedLegacyDelegation,
   RestakedRewards,
@@ -74,8 +71,8 @@ export function handleStashRewards(call: StashRewardsCall): void {
   )
 }
 
-export function handleBurntFTM(event: BurntFTM): void { }
-export function handleInflatedFTM(event: InflatedFTM): void { }
+// export function handleBurntU2U(event: BurntU2U): void { }
+// export function handleInflatedU2U(event: InflatedU2U): void { }
 export function handleRefundedSlashedLegacyDelegation(
   event: RefundedSlashedLegacyDelegation
 ): void { }

@@ -2,6 +2,8 @@
   "name": "sfc-subgraph",
   "license": "UNLICENSED",
   "scripts": {
+    "template:testnet": "mustache ./config/testnet.json subgraph.template.yaml > subgraph.yaml",
+    "template:mainnet": "mustache ./config/mainnet.json subgraph.template.yaml > subgraph.yaml",
     "codegen": "graph codegen",
     "build": "graph build",
     "deploy": "graph deploy --node https://api.thegraph.com/deploy/ u2u/sfc-subgraph",
@@ -15,7 +17,10 @@
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.55.0",
-    "@graphprotocol/graph-ts": "0.30.0"
+    "@graphprotocol/graph-ts": "0.30.0",
+    "mustache": "^4.2.0"
   },
-  "devDependencies": { "matchstick-as": "0.5.0" }
+  "devDependencies": {
+    "matchstick-as": "0.5.0"
+  }
 }
