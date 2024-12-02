@@ -2,15 +2,17 @@
   "name": "sfc-subgraph",
   "license": "UNLICENSED",
   "scripts": {
+    "template:testnet": "mustache ./config/testnet.json subgraph.template.yaml > subgraph.yaml",
+    "template:mainnet": "mustache ./config/mainnet.json subgraph.template.yaml > subgraph.yaml",
     "codegen": "graph codegen",
     "build": "graph build",
     "deploy": "graph deploy --node https://api.thegraph.com/deploy/ u2u/sfc-network",
     "create-local": "graph create --node http://localhost:8020/ u2u/sfc-network",
     "remove-local": "graph remove --node http://localhost:8020/ u2u/sfc-network",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 u2u/sfc-network",
-    "create-local-test": "graph create --node http://localhost:8020/ u2u/sfc-network-test",
-    "remove-local-test": "graph remove --node http://localhost:8020/ u2u/sfc-network-test",
-    "deploy-local-test": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 u2u/sfc-network-test -l v0.0.1",
+    "create-local-test": "graph create --node http://localhost:8020/ u2u/sfc-network-testnet",
+    "remove-local-test": "graph remove --node http://localhost:8020/ u2u/sfc-network-testnet",
+    "deploy-local-test": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 u2u/sfc-network-testnet -l v0.0.1",
     "create-local-v3": "graph create --node http://localhost:8020/ u2u/sfc-network-v3",
     "remove-local-v3": "graph remove --node http://localhost:8020/ u2u/sfc-network-v3",
     "deploy-local-v3": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 u2u/sfc-network-v3 -l v0.0.1",
@@ -18,7 +20,8 @@
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.55.0",
-    "@graphprotocol/graph-ts": "0.30.0"
+    "@graphprotocol/graph-ts": "0.30.0",
+    "mustache": "^4.2.0"
   },
   "devDependencies": { "matchstick-as": "0.5.0" }
 }
